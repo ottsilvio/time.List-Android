@@ -30,7 +30,9 @@ jobs:
 
       - name: Restore Android project
         run: |
+          sha256sum source/v11/chunk_*
           cat source/v11/chunk_* | tr -d '[:space:]' | base64 -d > /tmp/time-list-source.zip
+          sha256sum /tmp/time-list-source.zip
           rm -rf /tmp/time-list
           mkdir -p /tmp/time-list
           unzip -q /tmp/time-list-source.zip -d /tmp/time-list
