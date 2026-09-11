@@ -30,8 +30,25 @@ jobs:
 
       - name: Restore Android project
         run: |
-          cat source/v11/chunk_* | tr -d '[:space:]' | sed 's/Wbahsndzii/WbahsNdzii/' | base64 -d > /tmp/time-list-source.zip
-          echo "2c8754d39e97df122c31bc3a1ee1ccf7ba3908e95719eb00674172cfc600efcd  /tmp/time-list-source.zip" | sha256sum -c -
+          cat \
+            source/v12full/chunk_00 \
+            source/v12full/chunk_01 \
+            source/v12full/chunk_02 \
+            source/v12full/chunk_03 \
+            source/v12full/chunk_04 \
+            source/v12full/chunk_05 \
+            source/v12full/chunk_06 \
+            source/v12full/chunk_08 \
+            source/v12full/part_08 \
+            source/v12full/part_09 \
+            source/v12full/part_10 \
+            source/v12full/part_11 \
+            source/v12full/part_12 \
+            source/v12full/part_13 \
+            source/v12full/part_14 \
+            | tr -d '[:space:]' | base64 -d > /tmp/time-list-source.zip
+          echo "0657fe74c32c905359fd561bdcae49a1dafec51ad370b9b17bda23d7a22646c4  /tmp/time-list-source.zip" | sha256sum -c -
+          unzip -t /tmp/time-list-source.zip
           rm -rf /tmp/time-list
           mkdir -p /tmp/time-list
           unzip -q /tmp/time-list-source.zip -d /tmp/time-list
@@ -43,13 +60,13 @@ jobs:
 
       - name: Prepare installable APK
         run: |
-          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.1.apk
-          ls -lh Time-List-v1.1.apk
+          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.2.apk
+          ls -lh Time-List-v1.2.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Time-List-v1.1-APK
-          path: Time-List-v1.1.apk
+          name: Time-List-v1.2-APK
+          path: Time-List-v1.2.apk
           if-no-files-found: error
           retention-days: 30
