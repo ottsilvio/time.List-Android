@@ -1,4 +1,4 @@
-name: Build time.List APK
+name: Build Time List APK
 
 on:
   push:
@@ -30,11 +30,11 @@ jobs:
 
       - name: Restore Android project
         run: |
-          cat source/chunks/chunk_* | base64 -d > /tmp/time-list-source.zip
+          cat source/v11/chunk_* | tr -d '[:space:]' | base64 -d > /tmp/time-list-source.zip
+          rm -rf /tmp/time-list
+          mkdir -p /tmp/time-list
           unzip -q /tmp/time-list-source.zip -d /tmp/time-list
           test -f /tmp/time-list/time-list-android/app/build.gradle
-          echo 'android.useAndroidX=true' >> /tmp/time-list/time-list-android/gradle.properties
-          echo 'android.enableJetifier=true' >> /tmp/time-list/time-list-android/gradle.properties
 
       - name: Build debug APK
         working-directory: /tmp/time-list/time-list-android
@@ -42,13 +42,13 @@ jobs:
 
       - name: Prepare installable APK
         run: |
-          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk time.List-v1.0.apk
-          ls -lh time.List-v1.0.apk
+          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.1.apk
+          ls -lh Time-List-v1.1.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: time.List-v1.0-APK
-          path: time.List-v1.0.apk
+          name: Time-List-v1.1-APK
+          path: Time-List-v1.1.apk
           if-no-files-found: error
           retention-days: 30
