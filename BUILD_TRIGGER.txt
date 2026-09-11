@@ -1,1 +1,1 @@
-Trigger APK build after workflow registration.
+Time List v1.2 full source prepared for build.
