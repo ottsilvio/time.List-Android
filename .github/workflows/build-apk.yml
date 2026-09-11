@@ -33,6 +33,8 @@ jobs:
           cat source/chunks/chunk_* | base64 -d > /tmp/time-list-source.zip
           unzip -q /tmp/time-list-source.zip -d /tmp/time-list
           test -f /tmp/time-list/time-list-android/app/build.gradle
+          echo 'android.useAndroidX=true' >> /tmp/time-list/time-list-android/gradle.properties
+          echo 'android.enableJetifier=true' >> /tmp/time-list/time-list-android/gradle.properties
 
       - name: Build debug APK
         working-directory: /tmp/time-list/time-list-android
