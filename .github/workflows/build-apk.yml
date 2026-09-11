@@ -30,7 +30,7 @@ jobs:
 
       - name: Restore Android project
         run: |
-          base64 -d source/time-list-source.zip.b64 > /tmp/time-list-source.zip
+          cat source/chunks/chunk_* | base64 -d > /tmp/time-list-source.zip
           unzip -q /tmp/time-list-source.zip -d /tmp/time-list
           test -f /tmp/time-list/time-list-android/app/build.gradle
 
