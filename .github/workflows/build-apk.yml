@@ -30,9 +30,8 @@ jobs:
 
       - name: Restore Android project
         run: |
-          sha256sum source/v11/chunk_*
-          cat source/v11/chunk_* | tr -d '[:space:]' | base64 -d > /tmp/time-list-source.zip
-          sha256sum /tmp/time-list-source.zip
+          cat source/v11/chunk_* | tr -d '[:space:]' | sed 's/Wbahsndzii/WbahsNdzii/' | base64 -d > /tmp/time-list-source.zip
+          echo "2c8754d39e97df122c31bc3a1ee1ccf7ba3908e95719eb00674172cfc600efcd  /tmp/time-list-source.zip" | sha256sum -c -
           rm -rf /tmp/time-list
           mkdir -p /tmp/time-list
           unzip -q /tmp/time-list-source.zip -d /tmp/time-list
