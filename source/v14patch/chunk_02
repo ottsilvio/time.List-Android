@@ -1,0 +1,174 @@
+ONTAL);
++        swatches.setPadding(0, dp(7), 0, 0);
++        int count = Math.min(5, colors.length);
++        for (int i = 0; i < count; i++) {
++            View dot = new View(this);
++            dot.setBackground(roundRect(colors[i], 7));
++            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(12), 1f);
+             if (i > 0) lp.leftMargin = dp(3);
+-            row.addView(swatch, lp);
++            swatches.addView(dot, lp);
+         }
+-        return row;
++        card.addView(swatches, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(19)));
++        card.setOnClickListener(v -> {
++            if (!style.equals(PaletteManager.current(this))) {
++                prefs.edit().putString(PaletteManager.KEY, style).apply();
++                recreate();
++            }
++        });
++        return card;
+     }
+ 
+     private void showAgendaNoteDialog(CourseBlock existing) {
+@@ -626,7 +649,7 @@ public class MainActivity extends Activity {
+         box.setOrientation(LinearLayout.VERTICAL);
+         box.setPadding(dp(18), dp(4), dp(18), dp(8));
+ 
+-        TextView timeLabel = text("时间", 12.5f, Color.rgb(100, 96, 109), true);
++        TextView timeLabel = text("时间", 13.5f, Color.rgb(103, 78, 163), true);
+         timeLabel.setPadding(dp(2), dp(8), 0, dp(5));
+         box.addView(timeLabel);
+ 
+@@ -656,13 +679,13 @@ public class MainActivity extends Activity {
+         timeRow.addView(endBtn, new LinearLayout.LayoutParams(0, dp(46), 1f));
+         box.addView(timeRow);
+ 
+-        TextView placeLabel = text("地点", 12.5f, Color.rgb(100, 96, 109), true);
++        TextView placeLabel = text("地点", 13.5f, Color.rgb(103, 78, 163), true);
+         placeLabel.setPadding(dp(2), dp(10), 0, dp(5));
+         box.addView(placeLabel);
+         EditText place = softField(existing == null ? "" : existing.location, "例如：西五楼203");
+         box.addView(place);
+ 
+-        TextView thingLabel = text("事情", 12.5f, Color.rgb(100, 96, 109), true);
++        TextView thingLabel = text("事情", 13.5f, Color.rgb(103, 78, 163), true);
+         thingLabel.setPadding(dp(2), dp(10), 0, dp(5));
+         box.addView(thingLabel);
+         EditText thing = softField(existing == null ? "" : existing.title, "例如：小组讨论 / 打印图纸");
+@@ -722,7 +745,7 @@ public class MainActivity extends Activity {
+     private Button compactPickerButton(String label) {
+         Button b = new Button(this);
+         b.setText(label);
+-        b.setTextSize(13);
++        b.setTextSize(14.2f);
+         b.setAllCaps(false);
+         b.setPadding(dp(4), 0, dp(4), 0);
+         b.setTextColor(Color.rgb(58, 56, 65));
+@@ -735,7 +758,7 @@ public class MainActivity extends Activity {
+         EditText e = new EditText(this);
+         e.setText(value == null ? "" : value);
+         e.setHint(hint);
+-        e.setTextSize(15);
++        e.setTextSize(15.8f);
+         e.setSingleLine(true);
+         e.setPadding(dp(12), dp(9), dp(12), dp(9));
+         e.setTextColor(Color.rgb(48, 48, 56));
+@@ -812,20 +835,26 @@ public class MainActivity extends Activity {
+     }
+ 
+     private TextView settingTitle(String s) {
+-        TextView t = text(s, 13, Color.rgb(103, 88, 155), true);
+-        t.setPadding(0, dp(18), 0, dp(3));
++        TextView t = text(s, 14.5f, Color.rgb(94, 70, 148), true);
++        t.setPadding(dp(10), dp(8), dp(10), dp(8));
++        t.setBackground(roundRect(Color.rgb(244, 239, 250), 10));
++        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
++        lp.topMargin = dp(18);
++        lp.bottomMargin = dp(6);
++        t.setLayoutParams(lp);
+         return t;
+     }
+ 
+     private Button actionButton(String s) {
+         Button b = new Button(this);
+         b.setText(s);
+-        b.setTextSize(15);
++        b.setTextSize(15.8f);
+         b.setAllCaps(false);
+         b.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+-        b.setPadding(0, 0, 0, 0);
+-        b.setBackgroundColor(Color.TRANSPARENT);
+-        b.setTextColor(Color.rgb(45, 52, 66));
++        b.setPadding(dp(10), 0, dp(10), 0);
++        b.setMinHeight(dp(46));
++        b.setBackground(outlinedRoundRect(Color.rgb(250, 249, 252), Color.rgb(231, 227, 236), 11, 0.8f));
++        b.setTextColor(Color.rgb(48, 53, 66));
+         UiFont.apply(this, b, false);
+         return b;
+     }
+@@ -1020,7 +1049,7 @@ public class MainActivity extends Activity {
+     }
+ 
+     private TextView muted(String s) {
+-        TextView t = text(s, 13, Color.rgb(109, 116, 130), false);
++        TextView t = text(s, 14, Color.rgb(109, 116, 130), false);
+         t.setLineSpacing(0, 1.16f);
+         return t;
+     }
+@@ -1037,13 +1066,13 @@ public class MainActivity extends Activity {
+     private Button iconButton(String symbol) {
+         Button b = new Button(this);
+         b.setText(symbol);
+-        b.setTextSize("＋".equals(symbol) ? 23 : 16.5f);
++        b.setTextSize("＋".equals(symbol) ? 21.5f : 18f);
+         b.setAllCaps(false);
+         b.setGravity(Gravity.CENTER);
+         b.setPadding(0, 0, 0, 0);
+-        b.setBackground(roundRect(Color.rgb(242, 237, 249), 16));
++        b.setBackground(outlinedRoundRect(Color.rgb(244, 239, 250), Color.rgb(225, 216, 239), 14, 0.8f));
+         b.setTextColor(Color.rgb(96, 74, 148));
+-        b.setElevation(dp(1));
++        b.setElevation(dp(0));
+         b.setMinWidth(0);
+         b.setMinHeight(0);
+         UiFont.apply(this, b, true);
+@@ -1057,6 +1086,14 @@ public class MainActivity extends Activity {
+         return g;
+     }
+ 
++    private GradientDrawable outlinedRoundRect(int fill, int stroke, int radiusDp, float strokeDp) {
++        GradientDrawable g = new GradientDrawable();
++        g.setColor(fill);
++        g.setCornerRadius(dp(radiusDp));
++        g.setStroke(Math.max(1, Math.round(strokeDp * getResources().getDisplayMetrics().density)), stroke);
++        return g;
++    }
++
+     private boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
+     private int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
+ }
+diff --git a/app/src/main/java/com/timelist/app/PaletteManager.java b/app/src/main/java/com/timelist/app/PaletteManager.java
+index 805fd13..a6f4e91 100644
+--- a/app/src/main/java/com/timelist/app/PaletteManager.java
++++ b/app/src/main/java/com/timelist/app/PaletteManager.java
+@@ -10,38 +10,38 @@ public final class PaletteManager {
+     public static final String CHINESE = "chinese";
+     private static final String PREFS = "time_list_prefs";
+ 
+-    // A calm, classic Morandi set. Slightly deepened so white text stays crisp.
++    // Brighter Morandi palette: still restrained, but noticeably fresher on a phone screen.
+     private static final int[] MORANDI_COLORS = {
+-            Color.rgb(156, 145, 181), // dusty violet
+-            Color.rgb(122, 158, 190), // mist blue
+-            Color.rgb(111, 161, 153), // sage teal
+-            Color.rgb(183, 132, 145), // dusty rose
+-            Color.rgb(132, 160, 126), // sage green
+-            Color.rgb(190, 145, 105), // clay apricot
+-            Color.rgb(109, 164, 176), // muted cyan
+-            Color.rgb(164, 132, 158), // mauve
+-            Color.rgb(175, 157, 104)  // antique gold
++            Color.rgb(156, 168, 210), // 雾紫蓝
++            Color.rgb(127, 175, 211), // 晴空蓝
++            Color.rgb(128, 190, 174), // 薄荷青
++            Color.rgb(210, 143, 161), // 豆沙粉
++            Color.rgb(145, 181, 141), // 鼠尾草绿
++            Color.rgb(215, 160, 108), // 杏陶
++            Color.rgb(121, 185, 197), // 雾青
++            Color.rgb(178, 154, 195), // 藕紫
++            Color.rgb(195, 170, 112)  // 柔金
+     };
+ 
+     private static final String[] MORANDI_NAMES = {
+-            "雾紫", "灰蓝", "鼠尾草青", "豆沙粉", "鼠尾草绿", "陶杏", "雾青", "藕灰紫", "古金"
++            "雾紫蓝", 
