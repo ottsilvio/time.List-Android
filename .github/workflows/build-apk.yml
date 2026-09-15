@@ -52,13 +52,10 @@ jobs:
           mkdir -p /tmp/time-list
           unzip -q /tmp/time-list-v12-source.zip -d /tmp/time-list
           cat source/v13patch/chunk_00 source/v13patch/chunk_01 source/v13patch/chunk_02 source/v13patch/chunk_03 > /tmp/time-list-v13.patch
-          cp source/v13fix/fix_00 /tmp/time-list-v13-fix.patch
           cat source/v14patch/chunk_00 source/v14patch/chunk_01 source/v14patch/chunk_02 source/v14patch/chunk_03 > /tmp/time-list-v14.patch
           cd /tmp/time-list/time-list-android
           git apply --check /tmp/time-list-v13.patch
           git apply /tmp/time-list-v13.patch
-          git apply --check /tmp/time-list-v13-fix.patch
-          git apply /tmp/time-list-v13-fix.patch
           git apply --check /tmp/time-list-v14.patch
           git apply /tmp/time-list-v14.patch
           sed -i 's/versionCode 4/versionCode 5/' app/build.gradle
