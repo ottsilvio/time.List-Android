@@ -1,0 +1,253 @@
+diff --git a/README.md b/README.md
+index bb0605b..ef48963 100644
+--- a/README.md
++++ b/README.md
+@@ -70,3 +70,10 @@ OCR 使用 Google ML Kit 的 bundled Chinese model：
+ - 顶部加号与识别图标收缩到按钮内部约 80% 的视觉范围；加号加粗，识别框改为圆角。
+ - “添加日程”和“编辑名称”改为纯浅紫色块按钮。
+ - 底部导航统一为同一笔画粗细的线性图标。
++
++
++## v1.8 交互微调
++
++- 顶部图片导入改为更标准的“向下箭头 + 托盘”图标，加号缩小。
++- 个人名称编辑改为无底色文字操作，避免与资料卡浅紫底混在一起。
++- 配色选择支持展开详情；中国色可查看名称与对应古典诗文意象。
+diff --git a/app/build.gradle b/app/build.gradle
+index 2cbe970..dcd6097 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -10,8 +10,8 @@ android {
+         applicationId 'com.timelist.app'
+         minSdk 23
+         targetSdk 35
+-        versionCode 8
+-        versionName '1.7.0'
++        versionCode 9
++        versionName '1.8.0'
+     }
+ 
+     buildFeatures {
+diff --git a/app/src/main/java/com/timelist/app/HeaderIconView.java b/app/src/main/java/com/timelist/app/HeaderIconView.java
+index b57c794..7252e00 100644
+--- a/app/src/main/java/com/timelist/app/HeaderIconView.java
++++ b/app/src/main/java/com/timelist/app/HeaderIconView.java
+@@ -12,7 +12,7 @@ import android.view.View;
+ /** Flat header action button. Liquid-glass styling is intentionally reserved for course cards. */
+ public final class HeaderIconView extends View {
+     public static final int PLUS = 0;
+-    public static final int SCAN = 1;
++    public static final int IMPORT = 1;
+ 
+     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+     private final float density;
+@@ -39,7 +39,7 @@ public final class HeaderIconView extends View {
+         setBackground(bg);
+         paint.setColor(Color.rgb(104, 82, 156));
+         paint.setStyle(Paint.Style.STROKE);
+-        paint.setStrokeWidth(2.7f * density);
++        paint.setStrokeWidth(2.65f * density);
+         paint.setStrokeCap(Paint.Cap.ROUND);
+         paint.setStrokeJoin(Paint.Join.ROUND);
+         setClickable(true);
+@@ -50,17 +50,24 @@ public final class HeaderIconView extends View {
+         super.onDraw(canvas);
+         float cx = getWidth() / 2f;
+         float cy = getHeight() / 2f;
+-        float s = Math.min(getWidth(), getHeight()) * 0.27f;
++        float min = Math.min(getWidth(), getHeight());
+         if (type == PLUS) {
++            // Compact, friendly plus: deliberately smaller than the touch target.
++            paint.setStrokeWidth(2.8f * density);
++            float s = min * 0.19f;
+             canvas.drawLine(cx - s, cy, cx + s, cy, paint);
+             canvas.drawLine(cx, cy - s, cx, cy + s, paint);
+         } else {
+-            float r = 4.2f * density;
+-            RectF frame = new RectF(cx - s, cy - s, cx + s, cy + s);
+-            canvas.drawRoundRect(frame, r, r, paint);
+-            paint.setStyle(Paint.Style.FILL);
+-            canvas.drawCircle(cx, cy, 1.55f * density, paint);
+-            paint.setStyle(Paint.Style.STROKE);
++            // Conventional import glyph: a down arrow landing on a short tray.
++            paint.setStrokeWidth(2.45f * density);
++            float half = min * 0.22f;
++            float top = cy - min * 0.19f;
++            float tip = cy + min * 0.045f;
++            float trayY = cy + min * 0.215f;
++            canvas.drawLine(cx, top, cx, tip, paint);
++            canvas.drawLine(cx, tip, cx - min * 0.105f, tip - min * 0.105f, paint);
++            canvas.drawLine(cx, tip, cx + min * 0.105f, tip - min * 0.105f, paint);
++            canvas.drawLine(cx - half, trayY, cx + half, trayY, paint);
+         }
+     }
+ }
+diff --git a/app/src/main/java/com/timelist/app/MainActivity.java b/app/src/main/java/com/timelist/app/MainActivity.java
+index 4b6b7c6..b9db952 100644
+--- a/app/src/main/java/com/timelist/app/MainActivity.java
++++ b/app/src/main/java/com/timelist/app/MainActivity.java
+@@ -68,6 +68,7 @@ public class MainActivity extends Activity {
+     private WeekScheduleView scheduleView;
+     private int viewingWeek;
+     private int currentTab = 0;
++    private boolean paletteDetailsExpanded = false;
+ 
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+@@ -121,7 +122,7 @@ public class MainActivity extends Activity {
+         titleBox.addView(titleSub);
+ 
+         addButton = new HeaderIconView(this, HeaderIconView.PLUS);
+-        importButton = new HeaderIconView(this, HeaderIconView.SCAN);
++        importButton = new HeaderIconView(this, HeaderIconView.IMPORT);
+         addButton.setContentDescription("添加课程");
+         importButton.setContentDescription("从课表图片导入");
+         addButton.setOnClickListener(v -> CourseEditorDialog.show(this, null,
+@@ -446,6 +447,8 @@ public class MainActivity extends Activity {
+         paletteLabel.setPadding(dp(2), dp(12), 0, dp(7));
+         box.addView(paletteLabel);
+         box.addView(paletteStyleSelector());
++        box.addView(paletteDetailsToggle());
++        if (paletteDetailsExpanded) box.addView(paletteDetailsView(PaletteManager.current(this)));
+ 
+         box.addView(settingTitle("学期"));
+         TextView semester = text(getSemesterStart() + " 起 · " + getSemesterWeeks() + " 周", 15, Color.rgb(46, 53, 66), false);
+@@ -493,7 +496,7 @@ public class MainActivity extends Activity {
+         box.addView(clear);
+ 
+         box.addView(settingTitle("关于"));
+-        box.addView(muted("1.7.0 · 精简层级界面；仅课程卡片保留液态玻璃效果。数据仅保存在手机本地；图片识别使用设备端中文 OCR，导入后请核对周次、教室和考试时间。"));
++        box.addView(muted("1.8.0 · 精简层级界面；仅课程卡片保留液态玻璃效果。数据仅保存在手机本地；图片识别使用设备端中文 OCR，导入后请核对周次、教室和考试时间。"));
+ 
+         content.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+         updateBottomTabs();
+@@ -534,9 +537,13 @@ public class MainActivity extends Activity {
+         TextView hint = muted("点击头像从本地相册更换");
+         hint.setPadding(0, dp(2), 0, dp(4));
+         right.addView(hint);
+-        Button rename = compactPurpleButton("编辑名称");
++        TextView rename = text("编辑名称  ›", 13.8f, Color.rgb(103, 78, 157), true);
++        rename.setGravity(Gravity.CENTER_VERTICAL);
++        rename.setPadding(0, dp(5), dp(12), dp(5));
++        rename.setClickable(true);
++        rename.setFocusable(true);
+         rename.setOnClickListener(v -> editProfileName());
+-        right.addView(rename, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38)));
++        right.addView(rename, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(32)));
+         card.addView(right, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+         return card;
+     }
+@@ -633,12 +640,67 @@ public class MainActivity extends Activity {
+         card.setOnClickListener(v -> {
+             if (!style.equals(PaletteManager.current(this))) {
+                 prefs.edit().putString(PaletteManager.KEY, style).apply();
+-                recreate();
+             }
++            paletteDetailsExpanded = true;
++            showSettings();
+         });
+         return card;
+     }
+ 
++    private View paletteDetailsToggle() {
++        String style = PaletteManager.current(this);
++        String label = PaletteManager.CHINESE.equals(style) ? "中国色名称与诗文出处" : "莫兰迪颜色名称";
++        TextView toggle = text((paletteDetailsExpanded ? "收起" : "展开") + " · " + label,
++                13.2f, Color.rgb(103, 78, 157), true);
++        toggle.setGravity(Gravity.CENTER_VERTICAL);
++        toggle.setPadding(dp(2), dp(9), dp(4), dp(9));
++        toggle.setClickable(true);
++        toggle.setFocusable(true);
++        toggle.setOnClickListener(v -> {
++            paletteDetailsExpanded = !paletteDetailsExpanded;
++            showSettings();
++        });
++        return toggle;
++    }
++
++    private View paletteDetailsView(String style) {
++        int[] colors = PaletteManager.colorsFor(style);
++        String[] names = PaletteManager.colorNamesFor(style);
++        String[] details = PaletteManager.colorDetailsFor(style);
++        LinearLayout list = new LinearLayout(this);
++        list.setOrientation(LinearLayout.VERTICAL);
++        list.setPadding(0, dp(2), 0, dp(4));
++
++        int count = Math.min(colors.length, Math.min(names.length, details.length));
++        for (int i = 0; i < count; i++) {
++            LinearLayout row = new LinearLayout(this);
++            row.setOrientation(LinearLayout.HORIZONTAL);
++            row.setGravity(Gravity.CENTER_VERTICAL);
++            row.setPadding(dp(10), dp(8), dp(10), dp(8));
++            row.setBackground(outlinedRoundRect(Color.rgb(250, 249, 251), Color.rgb(233, 230, 236), 11, 0.55f));
++
++            View swatch = new View(this);
++            swatch.setBackground(roundRect(colors[i], 8));
++            LinearLayout.LayoutParams swatchLp = new LinearLayout.LayoutParams(dp(34), dp(34));
++            swatchLp.rightMargin = dp(11);
++            row.addView(swatch, swatchLp);
++
++            LinearLayout words = new LinearLayout(this);
++            words.setOrientation(LinearLayout.VERTICAL);
++            words.addView(text(names[i], 14.2f, Color.rgb(49, 47, 56), true));
++            TextView detail = text(details[i], 12.5f, Color.rgb(115, 111, 122), false);
++            detail.setPadding(0, dp(2), 0, 0);
++            detail.setLineSpacing(0, 1.08f);
++            words.addView(detail);
++            row.addView(words, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
++
++            LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
++            rowLp.bottomMargin = dp(6);
++            list.addView(row, rowLp);
++        }
++        return list;
++    }
++
+     private void showAgendaNoteDialog(CourseBlock existing) {
+         final boolean isNew = existing == null;
+         String[] meta = isNew ? null : noteMeta(existing);
+diff --git a/app/src/main/java/com/timelist/app/PaletteManager.java b/app/src/main/java/com/timelist/app/PaletteManager.java
+index 841123a..86c03e0 100644
+--- a/app/src/main/java/com/timelist/app/PaletteManager.java
++++ b/app/src/main/java/com/timelist/app/PaletteManager.java
+@@ -46,6 +46,25 @@ public final class PaletteManager {
+             "天青色", "暮山紫", "满江红", "松花绿", "霁雨蓝", "杏花橙", "竹月青", "月白色", "秋香黄"
+     };
+ 
++    private static final String[] MORANDI_NOTES = {
++            "清透 · 安静", "温和 · 内敛", "清爽 · 轻盈", "柔和 · 明快", "自然 · 平衡",
++            "温暖 · 亲和", "清澈 · 冷静", "雅致 · 克制", "明朗 · 稳定"
++    };
++
++    // These are presented as classical literary imagery rather than claims that every modern
++    // colour name was historically coined by the cited poem.
++    private static final String[] CHINESE_SOURCES = {
++            "杜甫《绝句》｜一行白鹭上青天",
++            "王勃《滕王阁序》｜烟光凝而暮山紫",
++            "白居易《暮江吟》｜半江瑟瑟半江红",
++            "孟浩然《过故人庄》｜绿树村边合，青山郭外斜",
++            "王维《山居秋暝》｜空山新雨后，天气晚来秋",
++            "志南《绝句》｜沾衣欲湿杏花雨",
++            "王维《竹里馆》｜深林人不知，明月来相照",
++            "李白《静夜思》｜床前明月光，疑是地上霜",
++            "苏轼《赠刘景文》｜最是橙黄橘绿时"
++    };
++
+     private static final int[] LEGACY = {
+             SeedData.PURPLE, SeedData.BLUE, SeedData.TEAL, SeedData.PINK,
+             SeedData.GREEN, SeedData.ORANGE, SeedData.CYAN, SeedData.ROSE, SeedData.GOLD
+@@ -74,6 +93,14 @@ public final class PaletteManager {
+         return CHINESE.equals(current(c)) ? CHINESE_NAMES.clone() : MORANDI_NAMES.clone();
+     }
+ 
++    public static String[] colorNamesFor(String style) {
++        return CHINESE.equals(style) ? CHINESE_NAMES.clone() : MORANDI_NAMES.clone();
++    }
++
++    public static String[] colorDetailsFor(String style) {
++        return CHINESE.equals(style) ? CHINESE_SOURCES.clone() : MORANDI_NOTES.clone();
++    }
++
+     public static int renderColor(Context c, CourseBlock course) {
+         int[] palette = colors(c);
+         if (course != null && course.notes != null && course.notes.startsWith("@TL_NOTE|")) {
