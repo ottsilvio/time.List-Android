@@ -46,13 +46,17 @@ jobs:
             source/v12full/part_12 \
             source/v12full/part_13 \
             source/v12full/part_14 \
-            | tr -d '[:space:]' | base64 -d > /tmp/time-list-source.zip
-          echo "0657fe74c32c905359fd561bdcae49a1dafec51ad370b9b17bda23d7a22646c4  /tmp/time-list-source.zip" | sha256sum -c -
-          unzip -t /tmp/time-list-source.zip
+            | tr -d '[:space:]' | base64 -d > /tmp/time-list-v12-source.zip
+          echo "0657fe74c32c905359fd561bdcae49a1dafec51ad370b9b17bda23d7a22646c4  /tmp/time-list-v12-source.zip" | sha256sum -c -
           rm -rf /tmp/time-list
           mkdir -p /tmp/time-list
-          unzip -q /tmp/time-list-source.zip -d /tmp/time-list
-          test -f /tmp/time-list/time-list-android/app/build.gradle
+          unzip -q /tmp/time-list-v12-source.zip -d /tmp/time-list
+          cat source/v13patch/chunk_00 source/v13patch/chunk_01 source/v13patch/chunk_02 source/v13patch/chunk_03 > /tmp/time-list-v13.patch
+          cd /tmp/time-list/time-list-android
+          git apply --check /tmp/time-list-v13.patch
+          git apply /tmp/time-list-v13.patch
+          test -f app/src/main/java/com/timelist/app/PaletteManager.java
+          grep -q "versionName '1.3.0'" app/build.gradle
 
       - name: Build debug APK
         working-directory: /tmp/time-list/time-list-android
@@ -60,13 +64,13 @@ jobs:
 
       - name: Prepare installable APK
         run: |
-          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.2.apk
-          ls -lh Time-List-v1.2.apk
+          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.3.apk
+          ls -lh Time-List-v1.3.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Time-List-v1.2-APK
-          path: Time-List-v1.2.apk
+          name: Time-List-v1.3-APK
+          path: Time-List-v1.3.apk
           if-no-files-found: error
           retention-days: 30
