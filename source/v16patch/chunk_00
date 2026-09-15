@@ -1,0 +1,183 @@
+diff --git a/README.md b/README.md
+index b00ba38..6e4460f 100644
+--- a/README.md
++++ b/README.md
+@@ -1,10 +1,10 @@
+-# time.List 时间列表
++# Time List
+ 
+ 一个面向 Android 的轻量课程表 App，按当前 2026—2027 学年第一学期课表预置数据。
+ 
+ ## 已实现
+ 
+-- 默认首页即“周课表”，按第 1—20 周切换；左右滑动或点击箭头换周。
++- 默认首页即“周课表”，按第 1—20 周切换；左右滑动换周。
+ - 周一至周日 + 日期表头；当前日期高亮。
+ - 1—12 节时间轴；课程按星期、节次、周次绘制为彩色块。
+ - 非本周课程可淡色显示，可在“我的”中关闭。
+@@ -25,7 +25,6 @@
+ - 预置考试：
+   - 建筑设备（二）（给水排水）：2026-10-13 晚上
+   - 建筑设备（三）（电气通讯）：2026-10-15 晚上
+-  - 生态修复理论：2026-11-10 晚上
+ 
+ ## 技术选择
+ 
+@@ -54,7 +53,6 @@ Debug APK 通常生成在：
+ 
+ `app/build/outputs/apk/debug/app-debug.apk`
+ 
+-> 当前生成环境没有 Android SDK/Gradle 且不能联网下载，因此这里附上的是完整 Android Studio 源码工程，未在当前环境内编译 APK。
+ 
+ ## 图片导入说明
+ 
+@@ -63,3 +61,10 @@ OCR 使用 Google ML Kit 的 bundled Chinese model：
+ `com.google.mlkit:text-recognition-chinese:16.0.1`
+ 
+ 最佳识别条件：完整课表、正向截图、文字清晰、不要裁掉“星期”和“1-2 / 3-4”等节次栏。识别结果导入前会预览，导入后可逐项手动修正。
++
++## v1.6 视觉规范
++
++- 整体采用平面、克制的现代移动端层级；液态玻璃效果仅用于课程卡片。
++- 课程卡片由左上较实、右下更浅，保证白色课程文字优先可读。
++- 顶栏、操作按钮、日程卡片、设置项均使用纯色/细描边，不再混用玻璃渐变。
++- 底部导航统一为同一笔画粗细的线性图标。
+diff --git a/app/build.gradle b/app/build.gradle
+index 35d8692..43f54b5 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -10,8 +10,8 @@ android {
+         applicationId 'com.timelist.app'
+         minSdk 23
+         targetSdk 35
+-        versionCode 6
+-        versionName '1.5.0'
++        versionCode 7
++        versionName '1.6.0'
+     }
+ 
+     buildFeatures {
+diff --git a/app/src/main/java/com/timelist/app/MainActivity.java b/app/src/main/java/com/timelist/app/MainActivity.java
+index 073630a..aac11da 100644
+--- a/app/src/main/java/com/timelist/app/MainActivity.java
++++ b/app/src/main/java/com/timelist/app/MainActivity.java
+@@ -63,8 +63,8 @@ public class MainActivity extends Activity {
+     private LinearLayout titleBox;
+     private TextView titleMain;
+     private TextView titleSub;
+-    private Button addButton;
+-    private Button importButton;
++    private HeaderIconView addButton;
++    private HeaderIconView importButton;
+     private WeekScheduleView scheduleView;
+     private int viewingWeek;
+     private int currentTab = 0;
+@@ -73,8 +73,8 @@ public class MainActivity extends Activity {
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         requestWindowFeature(Window.FEATURE_NO_TITLE);
+-        getWindow().setStatusBarColor(Color.rgb(249, 247, 252));
+-        getWindow().setNavigationBarColor(Color.rgb(249, 247, 252));
++        getWindow().setStatusBarColor(Color.rgb(251, 250, 252));
++        getWindow().setNavigationBarColor(Color.rgb(250, 249, 252));
+         getWindow().getDecorView().setSystemUiVisibility(
+                 View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+ 
+@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
+     private void buildShell() {
+         root = new LinearLayout(this);
+         root.setOrientation(LinearLayout.VERTICAL);
+-        root.setBackgroundColor(Color.rgb(252, 250, 253));
++        root.setBackgroundColor(Color.rgb(251, 250, 252));
+         root.setOnApplyWindowInsetsListener((v, insets) -> {
+             int top = insets.getSystemWindowInsetTop();
+             int bottom = insets.getSystemWindowInsetBottom();
+@@ -107,28 +107,28 @@ public class MainActivity extends Activity {
+         topBar = new LinearLayout(this);
+         topBar.setOrientation(LinearLayout.HORIZONTAL);
+         topBar.setGravity(Gravity.CENTER_VERTICAL);
+-        topBar.setPadding(dp(18), dp(6), dp(16), dp(3));
+-        topBar.setBackgroundColor(Color.rgb(249, 247, 252));
+-        root.addView(topBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(70)));
++        topBar.setPadding(dp(18), dp(8), dp(16), dp(5));
++        topBar.setBackgroundColor(Color.rgb(251, 250, 252));
++        root.addView(topBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(76)));
+ 
+         titleBox = new LinearLayout(this);
+         titleBox.setOrientation(LinearLayout.VERTICAL);
+         titleBox.setGravity(Gravity.CENTER_VERTICAL);
+         topBar.addView(titleBox, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+-        titleMain = text("", 25, Color.rgb(35, 34, 43), true);
+-        titleSub = text("", 14f, Color.rgb(111, 108, 121), false);
++        titleMain = text("", 27.5f, Color.rgb(31, 31, 38), true);
++        titleSub = text("", 14.5f, Color.rgb(112, 109, 120), false);
+         titleBox.addView(titleMain);
+         titleBox.addView(titleSub);
+ 
+-        addButton = iconButton("＋");
+-        importButton = iconButton("⌾");
++        addButton = new HeaderIconView(this, HeaderIconView.PLUS);
++        importButton = new HeaderIconView(this, HeaderIconView.SCAN);
+         addButton.setContentDescription("添加课程");
+         importButton.setContentDescription("从课表图片导入");
+         addButton.setOnClickListener(v -> CourseEditorDialog.show(this, null,
+                 Math.max(1, Math.min(7, weekdayToday())), 1, editorListener));
+         importButton.setOnClickListener(v -> pickImage());
+         LinearLayout.LayoutParams addLp = new LinearLayout.LayoutParams(dp(38), dp(38));
+-        addLp.rightMargin = dp(10);
++        addLp.rightMargin = dp(9);
+         topBar.addView(addButton, addLp);
+         topBar.addView(importButton, new LinearLayout.LayoutParams(dp(38), dp(38)));
+ 
+@@ -139,31 +139,30 @@ public class MainActivity extends Activity {
+         bottomBar = new LinearLayout(this);
+         bottomBar.setOrientation(LinearLayout.HORIZONTAL);
+         bottomBar.setGravity(Gravity.CENTER);
+-        bottomBar.setPadding(dp(10), dp(3), dp(10), dp(4));
+-        bottomBar.setBackgroundColor(Color.rgb(247, 244, 250));
+-        root.addView(bottomBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(72)));
+-        addBottomTab("□", "课表", 0);
+-        addBottomTab("≡", "日程", 1);
+-        addBottomTab("○", "我的", 2);
++        bottomBar.setPadding(dp(10), dp(3), dp(10), dp(5));
++        bottomBar.setBackground(outlinedRoundRect(Color.rgb(252, 251, 253), Color.rgb(235, 232, 239), 0, 0.55f));
++        root.addView(bottomBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(70)));
++        addBottomTab("课表", 0);
++        addBottomTab("日程", 1);
++        addBottomTab("我的", 2);
+ 
+         setContentView(root);
+         root.requestApplyInsets();
+     }
+ 
+-    private void addBottomTab(String icon, String label, int index) {
++    private void addBottomTab(String label, int index) {
+         LinearLayout tab = new LinearLayout(this);
+         tab.setOrientation(LinearLayout.VERTICAL);
+         tab.setGravity(Gravity.CENTER);
+-        tab.setPadding(0, dp(4), 0, dp(3));
++        tab.setPadding(0, dp(4), 0, dp(2));
+         tab.setTag(index);
+ 
+-        TextView iconView = text(icon, 20.5f, Color.rgb(126, 123, 135), false);
+-        iconView.setGravity(Gravity.CENTER);
+-        TextView labelView = text(label, 14.8f, Color.rgb(126, 123, 135), false);
++        NavIconView iconView = new NavIconView(this, index);
++        TextView labelView = text(label, 13.7f, Color.rgb(126, 123, 135), false);
+         labelView.setGravity(Gravity.CENTER);
+         labelView.setPadding(0, dp(1), 0, 0);
+-        tab.addView(iconView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(27)));
+-        tab.addView(labelView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(27)));
++        tab.addView(iconView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(28)));
++        tab.addView(labelView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(25)));
+ 
+         tab.setOnClickListener(v -> {
+             currentTab = index;
+             if (index == 0) showSchedule();
+             else if (index == 1) showAgenda();
+             else showSettings();
+             updateBottomTabs();
+         });
+         bottomBar.addView(tab, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+     }
+ 
