@@ -71,10 +71,12 @@ jobs:
           cp "$GITHUB_WORKSPACE/source/v16safe/HeaderIconView.java" app/src/main/java/com/timelist/app/HeaderIconView.java
           git apply --check "$GITHUB_WORKSPACE/source/v17patch/v1.7.patch"
           git apply "$GITHUB_WORKSPACE/source/v17patch/v1.7.patch"
+          git apply --check "$GITHUB_WORKSPACE/source/v18patch/v1.8.patch"
+          git apply "$GITHUB_WORKSPACE/source/v18patch/v1.8.patch"
           test -f app/src/main/java/com/timelist/app/NavIconView.java
           test -f app/src/main/java/com/timelist/app/HeaderIconView.java
-          grep -q "versionCode 8" app/build.gradle
-          grep -q "versionName '1.7.0'" app/build.gradle
+          grep -q "versionCode 9" app/build.gradle
+          grep -q "versionName '1.8.0'" app/build.gradle
 
       - name: Build debug APK
         working-directory: /tmp/time-list/time-list-android
@@ -82,13 +84,13 @@ jobs:
 
       - name: Prepare installable APK
         run: |
-          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.7.apk
-          ls -lh Time-List-v1.7.apk
+          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.8.apk
+          ls -lh Time-List-v1.8.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Time-List-v1.7-APK
-          path: Time-List-v1.7.apk
+          name: Time-List-v1.8-APK
+          path: Time-List-v1.8.apk
           if-no-files-found: error
           retention-days: 30
