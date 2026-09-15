@@ -54,7 +54,6 @@ jobs:
           cat source/v13patch/chunk_00 source/v13patch/chunk_01 source/v13patch/chunk_02 source/v13patch/chunk_03 > /tmp/time-list-v13.patch
           cat source/v14patch/chunk_00 source/v14patch/chunk_01 source/v14patch/chunk_02 source/v14patch/chunk_03 > /tmp/time-list-v14.patch
           cat source/v15patch/chunk_00 source/v15patch/chunk_01 source/v15patch/chunk_02 > /tmp/time-list-v15.patch
-          cat source/v16patch/chunk_00 source/v16patch/chunk_01 source/v16patch/chunk_02 source/v16patch/chunk_03 > /tmp/time-list-v16.patch
           echo "218794dd0d972fef513d5d0cff541393e4c2a1c711a8916a485168f3a038ae4c  /tmp/time-list-v15.patch" | sha256sum -c -
           cd /tmp/time-list/time-list-android
           git apply --check /tmp/time-list-v13.patch
@@ -64,8 +63,12 @@ jobs:
           sed -i 's/versionCode 4/versionCode 5/' app/build.gradle
           git apply --check /tmp/time-list-v15.patch
           git apply /tmp/time-list-v15.patch
-          git apply --check /tmp/time-list-v16.patch
-          git apply /tmp/time-list-v16.patch
+          for p in "$GITHUB_WORKSPACE"/source/v16safe/part0.patch "$GITHUB_WORKSPACE"/source/v16safe/part1.patch "$GITHUB_WORKSPACE"/source/v16safe/part2.patch "$GITHUB_WORKSPACE"/source/v16safe/part3.patch; do
+            git apply --check "$p"
+            git apply "$p"
+          done
+          cp "$GITHUB_WORKSPACE/source/v16safe/NavIconView.java" app/src/main/java/com/timelist/app/NavIconView.java
+          cp "$GITHUB_WORKSPACE/source/v16safe/HeaderIconView.java" app/src/main/java/com/timelist/app/HeaderIconView.java
           test -f app/src/main/java/com/timelist/app/NavIconView.java
           test -f app/src/main/java/com/timelist/app/HeaderIconView.java
           grep -q "versionCode 7" app/build.gradle
