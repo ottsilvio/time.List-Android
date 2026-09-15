@@ -1,0 +1,59 @@
+diff --git a/README.md b/README.md
+index b00ba38..6e4460f 100644
+--- a/README.md
++++ b/README.md
+@@ -1,10 +1,10 @@
+-# time.List 时间列表
++# Time List
+ 
+ 一个面向 Android 的轻量课程表 App，按当前 2026—2027 学年第一学期课表预置数据。
+ 
+ ## 已实现
+ 
+-- 默认首页即“周课表”，按第 1—20 周切换；左右滑动或点击箭头换周。
++- 默认首页即“周课表”，按第 1—20 周切换；左右滑动换周。
+ - 周一至周日 + 日期表头；当前日期高亮。
+ - 1—12 节时间轴；课程按星期、节次、周次绘制为彩色块。
+ - 非本周课程可淡色显示，可在“我的”中关闭。
+@@ -25,7 +25,6 @@
+ - 预置考试：
+   - 建筑设备（二）（给水排水）：2026-10-13 晚上
+   - 建筑设备（三）（电气通讯）：2026-10-15 晚上
+-  - 生态修复理论：2026-11-10 晚上
+ 
+ ## 技术选择
+ 
+@@ -54,7 +53,6 @@ Debug APK 通常生成在：
+ 
+ `app/build/outputs/apk/debug/app-debug.apk`
+ 
+-> 当前生成环境没有 Android SDK/Gradle 且不能联网下载，因此这里附上的是完整 Android Studio 源码工程，未在当前环境内编译 APK。
+ 
+ ## 图片导入说明
+ 
+@@ -63,3 +61,10 @@ OCR 使用 Google ML Kit 的 bundled Chinese model：
+ `com.google.mlkit:text-recognition-chinese:16.0.1`
+ 
+ 最佳识别条件：完整课表、正向截图、文字清晰、不要裁掉“星期”和“1-2 / 3-4”等节次栏。识别结果导入前会预览，导入后可逐项手动修正。
++
++## v1.6 视觉规范
++
++- 整体采用平面、克制的现代移动端层级；液态玻璃效果仅用于课程卡片。
++- 课程卡片由左上较实、右下更浅，保证白色课程文字优先可读。
++- 顶栏、操作按钮、日程卡片、设置项均使用纯色/细描边，不再混用玻璃渐变。
++- 底部导航统一为同一笔画粗细的线性图标。
+diff --git a/app/build.gradle b/app/build.gradle
+index 35d8692..43f54b5 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -10,8 +10,8 @@ android {
+         applicationId 'com.timelist.app'
+         minSdk 23
+         targetSdk 35
+-        versionCode 6
+-        versionName '1.5.0'
++        versionCode 7
++        versionName '1.6.0'
+     }
+ 
+     buildFeatures {
