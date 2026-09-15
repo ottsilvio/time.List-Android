@@ -1,0 +1,138 @@
+ity(Gravity.CENTER);
+-        TextView labelView = text(label, 14.8f, Color.rgb(126, 123, 135), false);
++        NavIconView iconView = new NavIconView(this, index);
++        TextView labelView = text(label, 13.7f, Color.rgb(126, 123, 135), false);
+         labelView.setGravity(Gravity.CENTER);
+         labelView.setPadding(0, dp(1), 0, 0);
+-        tab.addView(iconView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(27)));
+-        tab.addView(labelView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(27)));
++        tab.addView(iconView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(28)));
++        tab.addView(labelView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(25)));
+ 
+         tab.setOnClickListener(v -> {
+             currentTab = index;
+@@ -183,7 +182,9 @@ public class MainActivity extends Activity {
+             int color = idx == currentTab ? Color.rgb(103, 84, 158) : Color.rgb(126, 123, 135);
+             LinearLayout tab = (LinearLayout)v;
+             for (int j = 0; j < tab.getChildCount(); j++) {
+-                if (tab.getChildAt(j) instanceof TextView) ((TextView)tab.getChildAt(j)).setTextColor(color);
++                View child = tab.getChildAt(j);
++                if (child instanceof TextView) ((TextView) child).setTextColor(color);
++                else if (child instanceof NavIconView) ((NavIconView) child).setIconColor(color);
+             }
+         }
+     }
+@@ -234,7 +235,7 @@ public class MainActivity extends Activity {
+         wrap.setOrientation(LinearLayout.HORIZONTAL);
+         wrap.setGravity(Gravity.CENTER_VERTICAL);
+         wrap.setPadding(0, 0, dp(2), 0);
+-        wrap.setBackgroundColor(Color.rgb(246, 243, 250));
++        wrap.setBackgroundColor(Color.rgb(247, 245, 249));
+ 
+         View spacer = new View(this);
+         wrap.addView(spacer, new LinearLayout.LayoutParams(dp(WeekScheduleView.LEFT_WIDTH_DP), ViewGroup.LayoutParams.MATCH_PARENT));
+@@ -257,16 +258,16 @@ public class MainActivity extends Activity {
+             pill.setOrientation(LinearLayout.VERTICAL);
+             pill.setGravity(Gravity.CENTER);
+             pill.setPadding(dp(2), dp(4), dp(2), dp(4));
+-            TextView a = text(names[d - 1], 14.5f, Color.rgb(73, 70, 81), d <= 5);
++            TextView a = text(names[d - 1], 14.3f, Color.rgb(66, 64, 73), d <= 5);
+             a.setGravity(Gravity.CENTER);
+-            TextView b = text(String.valueOf(date.get(Calendar.DAY_OF_MONTH)), 12.8f, Color.rgb(132, 128, 140), false);
++            TextView b = text(String.valueOf(date.get(Calendar.DAY_OF_MONTH)), 12.6f, Color.rgb(132, 128, 140), false);
+             b.setGravity(Gravity.CENTER);
+             pill.addView(a);
+             pill.addView(b);
+ 
+             FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(dp(48), dp(50), Gravity.CENTER);
+             if (todayIso.equals(SemesterUtils.formatIso(date))) {
+-                pill.setBackground(roundRect(Color.rgb(231, 220, 250), 15));
++                pill.setBackground(roundRect(Color.rgb(234, 226, 247), 15));
+                 a.setTextColor(Color.rgb(102, 78, 163));
+                 b.setTextColor(Color.rgb(102, 78, 163));
+             }
+@@ -308,29 +309,27 @@ public class MainActivity extends Activity {
+     private void showAgenda() {
+         currentTab = 1;
+         content.removeAllViews();
+-        addButton.setVisibility(View.VISIBLE);
++        addButton.setVisibility(View.GONE);
+         importButton.setVisibility(View.GONE);
+-        addButton.setContentDescription("添加日程笔记");
+-        addButton.setOnClickListener(v -> showAgendaNoteDialog(null));
+         titleMain.setText("日程");
+         titleSub.setText("笔记 · 考试 · 本周安排");
+ 
+         ScrollView scroll = new ScrollView(this);
+         LinearLayout list = new LinearLayout(this);
+         list.setOrientation(LinearLayout.VERTICAL);
+-        list.setPadding(dp(16), dp(8), dp(16), dp(20));
++        list.setPadding(dp(18), dp(10), dp(18), dp(24));
+         scroll.addView(list);
+ 
+         LinearLayout noteHead = new LinearLayout(this);
+         noteHead.setOrientation(LinearLayout.HORIZONTAL);
+         noteHead.setGravity(Gravity.CENTER_VERTICAL);
+-        TextView nh = text("日程笔记", 19, Color.rgb(34, 40, 52), true);
++        TextView nh = text("日程笔记", 18.5f, Color.rgb(32, 35, 43), true);
+         noteHead.addView(nh, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+-        Button noteAdd = actionButton("＋ 添加");
++        Button noteAdd = actionButton("添加日程");
+         noteAdd.setGravity(Gravity.CENTER);
+         noteAdd.setTextColor(Color.rgb(112, 82, 170));
+         noteAdd.setOnClickListener(v -> showAgendaNoteDialog(null));
+-        noteHead.addView(noteAdd, new LinearLayout.LayoutParams(dp(92), dp(44)));
++        noteHead.addView(noteAdd, new LinearLayout.LayoutParams(dp(86), dp(38)));
+         list.addView(noteHead);
+ 
+         List<CourseBlock> courses = db.getAllCourses();
+@@ -343,7 +342,7 @@ public class MainActivity extends Activity {
+         }
+         if (noteCount == 0) list.addView(muted("添加时间、地点和事情后，会自动同步为课表中的日程块。"));
+ 
+-        TextView h1 = text("考试安排", 18, Color.rgb(34, 40, 52), true);
++        TextView h1 = text("考试安排", 18.5f, Color.rgb(32, 35, 43), true);
+         h1.setPadding(0, dp(22), 0, dp(8));
+         list.addView(h1);
+         List<ExamItem> exams = db.getExams();
+@@ -353,7 +352,7 @@ public class MainActivity extends Activity {
+             for (ExamItem e : exams) list.addView(examCard(e));
+         }
+ 
+-        TextView h2 = text("本周课程", 18, Color.rgb(34, 40, 52), true);
++        TextView h2 = text("本周课程", 18.5f, Color.rgb(32, 35, 43), true);
+         h2.setPadding(0, dp(22), 0, dp(8));
+         list.addView(h2);
+         int count = 0;
+@@ -379,9 +378,9 @@ public class MainActivity extends Activity {
+     private View agendaNoteCard(CourseBlock c) {
+         String[] meta = noteMeta(c);
+         LinearLayout card = cardBase();
+-        card.setBackground(roundRect(Color.rgb(255, 248, 224), 16));
+-        card.addView(text(meta[0] + "  " + meta[1] + "–" + meta[2], 13, Color.rgb(144, 102, 42), true));
+-        card.addView(text(c.title, 16, Color.rgb(48, 48, 55), true));
++        card.setBackground(roundRect(Color.rgb(255, 249, 232), 16));
++        card.addView(text(meta[0] + "  " + meta[1] + "–" + meta[2], 12.8f, Color.rgb(143, 103, 52), true));
++        card.addView(text(c.title, 15.8f, Color.rgb(42, 42, 49), true));
+         if (!isBlank(c.location)) card.addView(muted(c.location));
+         card.setOnClickListener(v -> showAgendaNoteDialog(c));
+         return card;
+@@ -389,8 +388,8 @@ public class MainActivity extends Activity {
+ 
+     private View examCard(ExamItem e) {
+         LinearLayout card = cardBase();
+-        TextView date = text(e.date + (isBlank(e.timeText) ? "" : "  " + e.timeText), 13, Color.rgb(103, 88, 155), true);
+-        TextView title = text(e.courseTitle, 16, Color.rgb(24, 31, 45), true);
++        TextView date = text(e.date + (isBlank(e.timeText) ? "" : "  " + e.timeText), 12.8f, Color.rgb(102, 88, 153), true);
++        TextView title = text(e.courseTitle, 15.8f, Color.rgb(30, 34, 44), true);
+         card.addView(date);
+         card.addView(title);
+         if (!isBlank(e.location)) card.addView(muted(e.location));
+@@ -400,8 +399,8 @@ public class MainActivity extends Activity {
+ 
+     private View infoCard(String heading, String body) {
+         LinearLayout card = cardBase();
+-        card.addView(text(heading, 13, Color.rgb(103, 88, 155), true));
+-        TextView b = text(body, 14, Color.rgb(45, 52, 66), false);
++        card.addView(text(heading, 12.8f, Color.rgb(102, 88, 153), true));
++        TextView b = text(body, 14.6f, Color.rgb(45, 50, 61), false);
