@@ -1,0 +1,132 @@
+diff --git a/README.md b/README.md
+index 6e4460f..bb0605b 100644
+--- a/README.md
++++ b/README.md
+@@ -62,9 +62,11 @@ OCR 使用 Google ML Kit 的 bundled Chinese model：
+ 
+ 最佳识别条件：完整课表、正向截图、文字清晰、不要裁掉“星期”和“1-2 / 3-4”等节次栏。识别结果导入前会预览，导入后可逐项手动修正。
+ 
+-## v1.6 视觉规范
++## v1.7 视觉规范
+ 
+ - 整体采用平面、克制的现代移动端层级；液态玻璃效果仅用于课程卡片。
+ - 课程卡片由左上较实、右下更浅，保证白色课程文字优先可读。
+ - 顶栏、操作按钮、日程卡片、设置项均使用纯色/细描边，不再混用玻璃渐变。
++- 顶部加号与识别图标收缩到按钮内部约 80% 的视觉范围；加号加粗，识别框改为圆角。
++- “添加日程”和“编辑名称”改为纯浅紫色块按钮。
+ - 底部导航统一为同一笔画粗细的线性图标。
+diff --git a/app/build.gradle b/app/build.gradle
+index 43f54b5..2cbe970 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -10,8 +10,8 @@ android {
+         applicationId 'com.timelist.app'
+         minSdk 23
+         targetSdk 35
+-        versionCode 7
+-        versionName '1.6.0'
++        versionCode 8
++        versionName '1.7.0'
+     }
+ 
+     buildFeatures {
+diff --git a/app/src/main/java/com/timelist/app/HeaderIconView.java b/app/src/main/java/com/timelist/app/HeaderIconView.java
+index e0781aa..b57c794 100644
+--- a/app/src/main/java/com/timelist/app/HeaderIconView.java
++++ b/app/src/main/java/com/timelist/app/HeaderIconView.java
+@@ -39,7 +39,7 @@ public final class HeaderIconView extends View {
+         setBackground(bg);
+         paint.setColor(Color.rgb(104, 82, 156));
+         paint.setStyle(Paint.Style.STROKE);
+-        paint.setStrokeWidth(2.0f * density);
++        paint.setStrokeWidth(2.7f * density);
+         paint.setStrokeCap(Paint.Cap.ROUND);
+         paint.setStrokeJoin(Paint.Join.ROUND);
+         setClickable(true);
+@@ -50,22 +50,17 @@ public final class HeaderIconView extends View {
+         super.onDraw(canvas);
+         float cx = getWidth() / 2f;
+         float cy = getHeight() / 2f;
+-        float s = Math.min(getWidth(), getHeight()) * 0.34f;
++        float s = Math.min(getWidth(), getHeight()) * 0.27f;
+         if (type == PLUS) {
+             canvas.drawLine(cx - s, cy, cx + s, cy, paint);
+             canvas.drawLine(cx, cy - s, cx, cy + s, paint);
+         } else {
+-            float x0 = cx - s, x1 = cx + s, y0 = cy - s, y1 = cy + s;
+-            float k = s * 0.48f;
+-            canvas.drawLine(x0, y0 + k, x0, y0, paint);
+-            canvas.drawLine(x0, y0, x0 + k, y0, paint);
+-            canvas.drawLine(x1 - k, y0, x1, y0, paint);
+-            canvas.drawLine(x1, y0, x1, y0 + k, paint);
+-            canvas.drawLine(x0, y1 - k, x0, y1, paint);
+-            canvas.drawLine(x0, y1, x0 + k, y1, paint);
+-            canvas.drawLine(x1 - k, y1, x1, y1, paint);
+-            canvas.drawLine(x1, y1 - k, x1, y1, paint);
+-            canvas.drawCircle(cx, cy, 1.2f * density, paint);
++            float r = 4.2f * density;
++            RectF frame = new RectF(cx - s, cy - s, cx + s, cy + s);
++            canvas.drawRoundRect(frame, r, r, paint);
++            paint.setStyle(Paint.Style.FILL);
++            canvas.drawCircle(cx, cy, 1.55f * density, paint);
++            paint.setStyle(Paint.Style.STROKE);
+         }
+     }
+ }
+diff --git a/app/src/main/java/com/timelist/app/MainActivity.java b/app/src/main/java/com/timelist/app/MainActivity.java
+index aac11da..4b6b7c6 100644
+--- a/app/src/main/java/com/timelist/app/MainActivity.java
++++ b/app/src/main/java/com/timelist/app/MainActivity.java
+@@ -325,9 +325,8 @@ public class MainActivity extends Activity {
+         noteHead.setGravity(Gravity.CENTER_VERTICAL);
+         TextView nh = text("日程笔记", 18.5f, Color.rgb(32, 35, 43), true);
+         noteHead.addView(nh, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+-        Button noteAdd = actionButton("添加日程");
++        Button noteAdd = compactPurpleButton("添加日程");
+         noteAdd.setGravity(Gravity.CENTER);
+-        noteAdd.setTextColor(Color.rgb(112, 82, 170));
+         noteAdd.setOnClickListener(v -> showAgendaNoteDialog(null));
+         noteHead.addView(noteAdd, new LinearLayout.LayoutParams(dp(86), dp(38)));
+         list.addView(noteHead);
+@@ -494,7 +493,7 @@ public class MainActivity extends Activity {
+         box.addView(clear);
+ 
+         box.addView(settingTitle("关于"));
+-        box.addView(muted("1.6.0 · 精简层级界面；仅课程卡片保留液态玻璃效果。数据仅保存在手机本地；图片识别使用设备端中文 OCR，导入后请核对周次、教室和考试时间。"));
++        box.addView(muted("1.7.0 · 精简层级界面；仅课程卡片保留液态玻璃效果。数据仅保存在手机本地；图片识别使用设备端中文 OCR，导入后请核对周次、教室和考试时间。"));
+ 
+         content.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+         updateBottomTabs();
+@@ -535,8 +534,7 @@ public class MainActivity extends Activity {
+         TextView hint = muted("点击头像从本地相册更换");
+         hint.setPadding(0, dp(2), 0, dp(4));
+         right.addView(hint);
+-        Button rename = actionButton("编辑名称");
+-        rename.setTextColor(Color.rgb(111, 80, 169));
++        Button rename = compactPurpleButton("编辑名称");
+         rename.setOnClickListener(v -> editProfileName());
+         right.addView(rename, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38)));
+         card.addView(right, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+@@ -865,6 +863,22 @@ public class MainActivity extends Activity {
+         return b;
+     }
+ 
++    private Button compactPurpleButton(String s) {
++        Button b = new Button(this);
++        b.setText(s);
++        b.setTextSize(14.2f);
++        b.setAllCaps(false);
++        b.setGravity(Gravity.CENTER);
++        b.setPadding(dp(13), 0, dp(13), 0);
++        b.setMinHeight(dp(38));
++        b.setBackground(roundRect(Color.rgb(238, 231, 249), 13));
++        b.setTextColor(Color.rgb(103, 78, 157));
++        b.setElevation(0f);
++        b.setStateListAnimator(null);
++        UiFont.apply(this, b, true);
++        return b;
++    }
++
+     private void editSemesterStart() {
+         Calendar c = SemesterUtils.parseDate(getSemesterStart());
+         new DatePickerDialog(this, (view, year, month, day) -> {
