@@ -1,0 +1,112 @@
+ew {
+             float b = chosen.endPeriod * rowHeight - gap;
+             RectF rect = new RectF(l, t, r, b);
+ 
+-            // A faint lavender halo creates separation without grid lines.
+-            RectF halo = new RectF(rect.left, rect.top + getResources().getDisplayMetrics().density,
+-                    rect.right, rect.bottom + getResources().getDisplayMetrics().density);
+-            canvas.drawRoundRect(halo, radius, radius, accentPaint);
++            int base = PaletteManager.renderColor(getContext(), chosen);
++            int top = lighten(base, 0.13f);
++            int bottom = darken(base, 0.055f);
++
++            // Soft tinted depth layer, deliberately small for a smooth long-list scroll.
++            underPaint.setColor(withAlpha(darken(base, 0.10f), active ? 34 : 14));
++            RectF depth = new RectF(rect.left, rect.top + 1.7f * density, rect.right, rect.bottom + 2.6f * density);
++            canvas.drawRoundRect(depth, radius, radius, underPaint);
+ 
+-            blockPaint.setColor(chosen.color);
+-            blockPaint.setAlpha(active ? 250 : 62);
++            // Liquid-glass style gradient body.
++            blockPaint.setShader(new LinearGradient(rect.left, rect.top, rect.right, rect.bottom,
++                    withAlpha(top, active ? 242 : 76), withAlpha(bottom, active ? 236 : 58), Shader.TileMode.CLAMP));
+             canvas.drawRoundRect(rect, radius, radius, blockPaint);
++            blockPaint.setShader(null);
++
++            // Subtle glass highlight near the top edge.
++            canvas.save();
++            canvas.clipRoundRect(rect, radius, radius);
++            glossPaint.setShader(new LinearGradient(rect.left, rect.top, rect.left, rect.top + rect.height() * 0.46f,
++                    Color.argb(active ? 78 : 24, 255, 255, 255), Color.TRANSPARENT, Shader.TileMode.CLAMP));
++            canvas.drawRect(rect.left, rect.top, rect.right, rect.top + rect.height() * 0.5f, glossPaint);
++            glossPaint.setShader(null);
++            canvas.restore();
++
++            // White glass rim.
++            borderPaint.setColor(Color.argb(active ? 118 : 36, 255, 255, 255));
++            canvas.drawRoundRect(new RectF(rect.left + 0.5f * density, rect.top + 0.5f * density,
++                    rect.right - 0.5f * density, rect.bottom - 0.5f * density), radius, radius, borderPaint);
+ 
+             String label = (active ? "" : "非本周\n") + chosen.title;
+             if (chosen.location != null && !chosen.location.trim().isEmpty()) {
+                 label += "\n" + shortLocation(chosen.location);
+             }
+-            drawBlockText(canvas, label, rect, active ? 255 : 120);
++            drawBlockText(canvas, label, rect, active ? 255 : 150);
+             hits.add(new Hit(rect, chosen));
+         }
+     }
+@@ -166,23 +204,43 @@ public class WeekScheduleView extends View {
+     }
+ 
+     private void drawBlockText(Canvas canvas, String text, RectF rect, int alpha) {
+-        int pad = (int)(5f * getResources().getDisplayMetrics().density);
++        int pad = (int)(5.5f * density);
+         int w = Math.max(1, (int)rect.width() - pad * 2);
+         blockText.setAlpha(alpha);
+         StaticLayout layout = StaticLayout.Builder.obtain(text, 0, text.length(), blockText, w)
+                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                 .setIncludePad(false)
+-                .setLineSpacing(0, 0.96f)
++                .setLineSpacing(0, 0.97f)
+                 .setMaxLines(Math.max(2, (int)(rect.height() / (blockText.getTextSize() * 1.12f))))
+                 .setEllipsize(android.text.TextUtils.TruncateAt.END)
+                 .build();
+         canvas.save();
+-        canvas.clipRect(rect);
++        canvas.clipRoundRect(rect, radius, radius);
+         canvas.translate(rect.left + pad, rect.top + pad);
+         layout.draw(canvas);
+         canvas.restore();
+     }
+ 
++    private static int withAlpha(int color, int alpha) {
++        return Color.argb(Math.max(0, Math.min(255, alpha)), Color.red(color), Color.green(color), Color.blue(color));
++    }
++
++    private static int lighten(int color, float amount) {
++        int r = Math.round(Color.red(color) + (255 - Color.red(color)) * amount);
++        int g = Math.round(Color.green(color) + (255 - Color.green(color)) * amount);
++        int b = Math.round(Color.blue(color) + (255 - Color.blue(color)) * amount);
++        return Color.rgb(clamp(r), clamp(g), clamp(b));
++    }
++
++    private static int darken(int color, float amount) {
++        int r = Math.round(Color.red(color) * (1f - amount));
++        int g = Math.round(Color.green(color) * (1f - amount));
++        int b = Math.round(Color.blue(color) * (1f - amount));
++        return Color.rgb(clamp(r), clamp(g), clamp(b));
++    }
++
++    private static int clamp(int v) { return Math.max(0, Math.min(255, v)); }
++
+     @Override
+     public boolean onTouchEvent(MotionEvent event) {
+         switch (event.getActionMasked()) {
+@@ -193,14 +251,14 @@ public class WeekScheduleView extends View {
+             case MotionEvent.ACTION_MOVE:
+                 float mx = event.getX() - downX;
+                 float my = event.getY() - downY;
+-                if (Math.abs(mx) > getResources().getDisplayMetrics().density * 12f && Math.abs(mx) > Math.abs(my)) {
++                if (Math.abs(mx) > density * 12f && Math.abs(mx) > Math.abs(my)) {
+                     getParent().requestDisallowInterceptTouchEvent(true);
+                 }
+                 return true;
+             case MotionEvent.ACTION_UP:
+                 float dx = event.getX() - downX;
+                 float dy = event.getY() - downY;
+-                float threshold = 62f * getResources().getDisplayMetrics().density;
++                float threshold = 62f * density;
+                 if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy) * 1.15f) {
+                     if (listener != null) listener.onSwipeWeek(dx < 0 ? 1 : -1);
+                     return true;
