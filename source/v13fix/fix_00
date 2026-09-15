@@ -1,0 +1,47 @@
+--- a/app/src/main/java/com/timelist/app/WeekScheduleView.java
++++ b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+@@ -5,6 +5,7 @@
+ import android.graphics.Color;
+ import android.graphics.LinearGradient;
+ import android.graphics.Paint;
++import android.graphics.Path;
+ import android.graphics.RectF;
+ import android.graphics.Shader;
+ import android.text.Layout;
+@@ -34,6 +35,7 @@
+     private final Paint underPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+     private final Paint glossPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+     private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
++    private final Path clipPath = new Path();
+     private final TextPaint blockText = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+     private final ArrayList<Hit> hits = new ArrayList<>();
+     private List<CourseBlock> allCourses = new ArrayList<>();
+@@ -164,7 +166,7 @@
+ 
+             // Subtle glass highlight near the top edge.
+             canvas.save();
+-            canvas.clipRoundRect(rect, radius, radius);
++            clipRounded(canvas, rect);
+             glossPaint.setShader(new LinearGradient(rect.left, rect.top, rect.left, rect.top + rect.height() * 0.46f,
+                     Color.argb(active ? 78 : 24, 255, 255, 255), Color.TRANSPARENT, Shader.TileMode.CLAMP));
+             canvas.drawRect(rect.left, rect.top, rect.right, rect.top + rect.height() * 0.5f, glossPaint);
+@@ -215,12 +217,18 @@
+                 .setEllipsize(android.text.TextUtils.TruncateAt.END)
+                 .build();
+         canvas.save();
+-        canvas.clipRoundRect(rect, radius, radius);
++        clipRounded(canvas, rect);
+         canvas.translate(rect.left + pad, rect.top + pad);
+         layout.draw(canvas);
+         canvas.restore();
+     }
+ 
++    private void clipRounded(Canvas canvas, RectF rect) {
++        clipPath.reset();
++        clipPath.addRoundRect(rect, radius, radius, Path.Direction.CW);
++        canvas.clipPath(clipPath);
++    }
++
+     private static int withAlpha(int color, int alpha) {
+         return Color.argb(Math.max(0, Math.min(255, alpha)), Color.red(color), Color.green(color), Color.blue(color));
+     }
