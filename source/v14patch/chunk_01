@@ -138,4 +138,4 @@
 +        card.addView(title);
 +
 +        LinearLayout swatches = new LinearLayout(this);
-+        swatches.setOrientation(LinearLayout.HORIZONTAL);
++        swatches.setOrientation(LinearLayout.HORIZ
