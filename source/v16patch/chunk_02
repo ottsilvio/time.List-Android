@@ -1,0 +1,157 @@
+, false);
++        card.addView(text(heading, 12.8f, Color.rgb(102, 88, 153), true));
++        TextView b = text(body, 14.6f, Color.rgb(45, 50, 61), false);
+         b.setLineSpacing(0, 1.18f);
+         card.addView(b);
+         return card;
+@@ -410,8 +409,8 @@ public class MainActivity extends Activity {
+     private LinearLayout cardBase() {
+         LinearLayout card = new LinearLayout(this);
+         card.setOrientation(LinearLayout.VERTICAL);
+-        card.setPadding(dp(14), dp(12), dp(14), dp(12));
+-        card.setBackground(roundRect(Color.rgb(244, 246, 251), 14));
++        card.setPadding(dp(15), dp(13), dp(15), dp(13));
++        card.setBackground(outlinedRoundRect(Color.rgb(247, 248, 251), Color.rgb(236, 237, 242), 16, 0.55f));
+         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+         lp.bottomMargin = dp(9);
+         card.setLayoutParams(lp);
+@@ -495,7 +494,7 @@ public class MainActivity extends Activity {
+         box.addView(clear);
+ 
+         box.addView(settingTitle("关于"));
+-        box.addView(muted("1.5.0 · 明亮莫兰迪 / 中国传统色双配色，液态玻璃课程卡片。数据仅保存在手机本地；图片识别使用设备端中文 OCR，导入后请核对周次、教室和考试时间。"));
++        box.addView(muted("1.6.0 · 精简层级界面；仅课程卡片保留液态玻璃效果。数据仅保存在手机本地；图片识别使用设备端中文 OCR，导入后请核对周次、教室和考试时间。"));
+ 
+         content.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+         updateBottomTabs();
+@@ -842,12 +841,11 @@ public class MainActivity extends Activity {
+     }
+ 
+     private TextView settingTitle(String s) {
+-        TextView t = text(s, 14.5f, Color.rgb(94, 70, 148), true);
+-        t.setPadding(dp(10), dp(8), dp(10), dp(8));
+-        t.setBackground(roundRect(Color.rgb(244, 239, 250), 10));
++        TextView t = text(s, 13.4f, Color.rgb(102, 80, 151), true);
++        t.setPadding(dp(2), dp(7), dp(2), dp(6));
+         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+         lp.topMargin = dp(18);
+-        lp.bottomMargin = dp(6);
++        lp.bottomMargin = dp(4);
+         t.setLayoutParams(lp);
+         return t;
+     }
+@@ -855,15 +853,14 @@ public class MainActivity extends Activity {
+     private Button actionButton(String s) {
+         Button b = new Button(this);
+         b.setText(s);
+-        b.setTextSize(15.8f);
++        b.setTextSize(14.8f);
+         b.setAllCaps(false);
+         b.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+-        b.setPadding(dp(10), 0, dp(10), 0);
+-        b.setMinHeight(dp(46));
+-        b.setBackground(glassRoundRect(Color.rgb(244, 238, 252), Color.rgb(253, 251, 255),
+-                Color.rgb(226, 218, 238), 12, 0.8f));
+-        b.setTextColor(Color.rgb(64, 58, 78));
+-        b.setElevation(dp(1));
++        b.setPadding(dp(12), 0, dp(12), 0);
++        b.setMinHeight(dp(44));
++        b.setBackground(outlinedRoundRect(Color.rgb(247, 245, 249), Color.rgb(231, 227, 235), 12, 0.65f));
++        b.setTextColor(Color.rgb(61, 58, 69));
++        b.setElevation(0f);
+         UiFont.apply(this, b, false);
+         return b;
+     }
+@@ -1058,7 +1055,7 @@ public class MainActivity extends Activity {
+     }
+ 
+     private TextView muted(String s) {
+-        TextView t = text(s, 14, Color.rgb(109, 116, 130), false);
++        TextView t = text(s, 13.7f, Color.rgb(113, 116, 126), false);
+         t.setLineSpacing(0, 1.16f);
+         return t;
+     }
+@@ -1072,23 +1069,6 @@ public class MainActivity extends Activity {
+         return t;
+     }
+ 
+-    private Button iconButton(String symbol) {
+-        Button b = new Button(this);
+-        b.setText(symbol);
+-        b.setTextSize("＋".equals(symbol) ? 20.5f : 19.5f);
+-        b.setAllCaps(false);
+-        b.setGravity(Gravity.CENTER);
+-        b.setPadding(0, 0, 0, 0);
+-        b.setBackground(glassRoundRect(Color.rgb(234, 224, 249), Color.rgb(252, 249, 255),
+-                Color.rgb(220, 210, 236), 14, 0.9f));
+-        b.setTextColor(Color.rgb(96, 74, 148));
+-        b.setElevation(dp(1));
+-        b.setMinWidth(0);
+-        b.setMinHeight(0);
+-        UiFont.apply(this, b, true);
+-        return b;
+-    }
+-
+     private GradientDrawable roundRect(int color, int radiusDp) {
+         GradientDrawable g = new GradientDrawable();
+         g.setColor(color);
+diff --git a/app/src/main/java/com/timelist/app/WeekScheduleView.java b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+index e167617..12a1874 100644
+--- a/app/src/main/java/com/timelist/app/WeekScheduleView.java
++++ b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+@@ -62,28 +62,28 @@ public class WeekScheduleView extends View {
+         density = getResources().getDisplayMetrics().density;
+         float sd = getResources().getDisplayMetrics().scaledDensity;
+         leftWidth = LEFT_WIDTH_DP * density;
+-        rowHeight = 65f * density;
+-        gap = 2.8f * density;
+-        radius = 13f * density;
++        rowHeight = 64f * density;
++        gap = 3.0f * density;
++        radius = 13.5f * density;
+ 
+-        periodPaint.setColor(Color.rgb(112, 112, 124));
+-        periodPaint.setTextSize(13.4f * sd);
++        periodPaint.setColor(Color.rgb(105, 103, 114));
++        periodPaint.setTextSize(13.5f * sd);
+         periodPaint.setTextAlign(Paint.Align.CENTER);
+-        periodPaint.setTypeface(UiFont.typeface(context, true));
++        periodPaint.setTypeface(UiFont.typeface(context, false));
+ 
+-        axisPaint.setColor(Color.rgb(247, 244, 250));
+-        gridPaint.setColor(Color.argb(68, 201, 203, 212));
++        axisPaint.setColor(Color.rgb(247, 245, 249));
++        gridPaint.setColor(Color.argb(92, 219, 218, 224));
+         gridPaint.setStrokeWidth(Math.max(1f, 0.55f * density));
+ 
+         blockText.setColor(Color.WHITE);
+-        blockText.setTextSize(11.5f * sd);
++        blockText.setTextSize(11.9f * sd);
+         blockText.setTypeface(UiFont.typeface(context, true));
+-        blockText.setShadowLayer(1.35f * density, 0f, 0.75f * density, Color.argb(98, 34, 34, 44));
++        blockText.setShadowLayer(1.15f * density, 0f, 0.65f * density, Color.argb(82, 30, 31, 39));
+ 
+         borderPaint.setStyle(Paint.Style.STROKE);
+         borderPaint.setStrokeWidth(Math.max(1f, 0.8f * density));
+         glossPaint.setStyle(Paint.Style.FILL);
+-        setBackgroundColor(Color.rgb(252, 251, 253));
++        setBackgroundColor(Color.rgb(251, 250, 252));
+     }
+ 
+     public void setListener(Listener listener) { this.listener = listener; }
+@@ -154,36 +154,34 @@ public class WeekScheduleView extends View {
+             RectF rect = new RectF(l, t, r, b);
+ 
+             int base = PaletteManager.renderColor(getContext(), chosen);
+-            // Keep the text side slightly deeper, then let the card open up toward
+-            // the lower-right corner. This preserves white-text contrast while making
+-            // the block feel lighter and more transparent.
+-            int top = darken(base, 0.025f);
+-            int bottom = lighten(base, 0.20f);
+-
+-            // Soft tinted depth layer, deliberately small for a smooth long-list scroll.
+-            underPaint.setColor(withAlpha(darken(base, 0.08f), active ? 28 : 12));
+-            RectF depth = new RectF(rect.left, rect.top + 1.7f * density, rect.right, rect.bottom + 2.6f * density);
++            // Course cards are the only liquid-glass element in the app. The colour
++            // starts denser at the upper-left (where the title is read first) and opens
++            // toward 
