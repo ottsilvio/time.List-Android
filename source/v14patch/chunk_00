@@ -149,11 +149,4 @@ index 1b84a10..5fdf5fe 100644
          addBottomTab("≡\n日程", 1);
          addBottomTab("○\n我的", 2);
 @@ -150,7 +153,7 @@ public class MainActivity extends Activity {
-     private void addBottomTab(String label, int index) {
-         Button b = new Button(this);
-         b.setText(label);
--        b.setTextSize(12);
-+        b.setTextSize(14.5f);
-         b.setAllCaps(false);
-         b.setGravity(Gravity.CENTER);
-         b.setPadding(0, 0, 0, 0);
+     private void addBottomTab(String label, int
