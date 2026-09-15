@@ -1,0 +1,133 @@
+diff --git a/app/build.gradle b/app/build.gradle
+index 2d5d951..35d8692 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -10,8 +10,8 @@ android {
+         applicationId 'com.timelist.app'
+         minSdk 23
+         targetSdk 35
+-        versionCode 5
+-        versionName '1.4.0'
++        versionCode 6
++        versionName '1.5.0'
+     }
+ 
+     buildFeatures {
+diff --git a/app/src/main/java/com/timelist/app/MainActivity.java b/app/src/main/java/com/timelist/app/MainActivity.java
+index 5fdf5fe..073630a 100644
+--- a/app/src/main/java/com/timelist/app/MainActivity.java
++++ b/app/src/main/java/com/timelist/app/MainActivity.java
+@@ -121,16 +121,16 @@ public class MainActivity extends Activity {
+         titleBox.addView(titleSub);
+ 
+         addButton = iconButton("＋");
+-        importButton = iconButton("▣");
++        importButton = iconButton("⌾");
+         addButton.setContentDescription("添加课程");
+         importButton.setContentDescription("从课表图片导入");
+         addButton.setOnClickListener(v -> CourseEditorDialog.show(this, null,
+                 Math.max(1, Math.min(7, weekdayToday())), 1, editorListener));
+         importButton.setOnClickListener(v -> pickImage());
+-        LinearLayout.LayoutParams addLp = new LinearLayout.LayoutParams(dp(40), dp(40));
+-        addLp.rightMargin = dp(8);
++        LinearLayout.LayoutParams addLp = new LinearLayout.LayoutParams(dp(38), dp(38));
++        addLp.rightMargin = dp(10);
+         topBar.addView(addButton, addLp);
+-        topBar.addView(importButton, new LinearLayout.LayoutParams(dp(40), dp(40)));
++        topBar.addView(importButton, new LinearLayout.LayoutParams(dp(38), dp(38)));
+ 
+         content = new LinearLayout(this);
+         content.setOrientation(LinearLayout.VERTICAL);
+@@ -141,42 +141,49 @@ public class MainActivity extends Activity {
+         bottomBar.setGravity(Gravity.CENTER);
+         bottomBar.setPadding(dp(10), dp(3), dp(10), dp(4));
+         bottomBar.setBackgroundColor(Color.rgb(247, 244, 250));
+-        root.addView(bottomBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
+-        addBottomTab("▦\n课表", 0);
+-        addBottomTab("≡\n日程", 1);
+-        addBottomTab("○\n我的", 2);
++        root.addView(bottomBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(72)));
++        addBottomTab("□", "课表", 0);
++        addBottomTab("≡", "日程", 1);
++        addBottomTab("○", "我的", 2);
+ 
+         setContentView(root);
+         root.requestApplyInsets();
+     }
+ 
+-    private void addBottomTab(String label, int index) {
+-        Button b = new Button(this);
+-        b.setText(label);
+-        b.setTextSize(14.5f);
+-        b.setAllCaps(false);
+-        b.setGravity(Gravity.CENTER);
+-        b.setPadding(0, 0, 0, 0);
+-        b.setBackgroundColor(Color.TRANSPARENT);
+-        UiFont.apply(this, b, false);
+-        b.setTag(index);
+-        b.setOnClickListener(v -> {
++    private void addBottomTab(String icon, String label, int index) {
++        LinearLayout tab = new LinearLayout(this);
++        tab.setOrientation(LinearLayout.VERTICAL);
++        tab.setGravity(Gravity.CENTER);
++        tab.setPadding(0, dp(4), 0, dp(3));
++        tab.setTag(index);
++
++        TextView iconView = text(icon, 20.5f, Color.rgb(126, 123, 135), false);
++        iconView.setGravity(Gravity.CENTER);
++        TextView labelView = text(label, 14.8f, Color.rgb(126, 123, 135), false);
++        labelView.setGravity(Gravity.CENTER);
++        labelView.setPadding(0, dp(1), 0, 0);
++        tab.addView(iconView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(27)));
++        tab.addView(labelView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(27)));
++
++        tab.setOnClickListener(v -> {
+             currentTab = index;
+             if (index == 0) showSchedule();
+             else if (index == 1) showAgenda();
+             else showSettings();
+             updateBottomTabs();
+         });
+-        bottomBar.addView(b, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
++        bottomBar.addView(tab, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+     }
+ 
+     private void updateBottomTabs() {
+         for (int i = 0; i < bottomBar.getChildCount(); i++) {
+             View v = bottomBar.getChildAt(i);
+-            if (v instanceof Button) {
+-                Button b = (Button) v;
+-                int idx = (Integer)b.getTag();
+-                b.setTextColor(idx == currentTab ? Color.rgb(103, 84, 158) : Color.rgb(126, 123, 135));
++            if (!(v instanceof LinearLayout) || v.getTag() == null) continue;
++            int idx = (Integer)v.getTag();
++            int color = idx == currentTab ? Color.rgb(103, 84, 158) : Color.rgb(126, 123, 135);
++            LinearLayout tab = (LinearLayout)v;
++            for (int j = 0; j < tab.getChildCount(); j++) {
++                if (tab.getChildAt(j) instanceof TextView) ((TextView)tab.getChildAt(j)).setTextColor(color);
+             }
+         }
+     }
+@@ -227,7 +234,7 @@ public class MainActivity extends Activity {
+         wrap.setOrientation(LinearLayout.HORIZONTAL);
+         wrap.setGravity(Gravity.CENTER_VERTICAL);
+         wrap.setPadding(0, 0, dp(2), 0);
+-        wrap.setBackgroundColor(Color.rgb(251, 249, 253));
++        wrap.setBackgroundColor(Color.rgb(246, 243, 250));
+ 
+         View spacer = new View(this);
+         wrap.addView(spacer, new LinearLayout.LayoutParams(dp(WeekScheduleView.LEFT_WIDTH_DP), ViewGroup.LayoutParams.MATCH_PARENT));
+@@ -259,7 +266,7 @@ public class MainActivity extends Activity {
+ 
+             FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(dp(48), dp(50), Gravity.CENTER);
+             if (todayIso.equals(SemesterUtils.formatIso(date))) {
+-                pill.setBackground(roundRect(Color.rgb(235, 227, 250), 15));
++                pill.setBackground(roundRect(Color.rgb(231, 220, 250), 15));
+                 a.setTextColor(Color.rgb(102, 78, 163));
+                 b.setTextColor(Color.rgb(102, 78, 163));
+             }
+@@ -320,10 +327,10 @@ public class MainActivity extends Activity {
+         TextView nh = text("日程笔记", 19, Color.rgb(34, 40, 52), true);
+         noteHead.addView(nh, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+         Button noteAdd = actionButton("＋ 添加");
+-        noteAdd.setGravity(Gravity
