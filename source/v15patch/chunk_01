@@ -1,0 +1,120 @@
+.RIGHT | Gravity.CENTER_VERTICAL);
++        noteAdd.setGravity(Gravity.CENTER);
+         noteAdd.setTextColor(Color.rgb(112, 82, 170));
+         noteAdd.setOnClickListener(v -> showAgendaNoteDialog(null));
+-        noteHead.addView(noteAdd, new LinearLayout.LayoutParams(dp(84), dp(44)));
++        noteHead.addView(noteAdd, new LinearLayout.LayoutParams(dp(92), dp(44)));
+         list.addView(noteHead);
+ 
+         List<CourseBlock> courses = db.getAllCourses();
+@@ -488,7 +495,7 @@ public class MainActivity extends Activity {
+         box.addView(clear);
+ 
+         box.addView(settingTitle("关于"));
+-        box.addView(muted("1.4.0 · 明亮莫兰迪 / 中国传统色双配色，液态玻璃课程卡片。数据仅保存在手机本地；图片识别使用设备端中文 OCR，导入后请核对周次、教室和考试时间。"));
++        box.addView(muted("1.5.0 · 明亮莫兰迪 / 中国传统色双配色，液态玻璃课程卡片。数据仅保存在手机本地；图片识别使用设备端中文 OCR，导入后请核对周次、教室和考试时间。"));
+ 
+         content.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+         updateBottomTabs();
+@@ -853,8 +860,10 @@ public class MainActivity extends Activity {
+         b.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+         b.setPadding(dp(10), 0, dp(10), 0);
+         b.setMinHeight(dp(46));
+-        b.setBackground(outlinedRoundRect(Color.rgb(250, 249, 252), Color.rgb(231, 227, 236), 11, 0.8f));
+-        b.setTextColor(Color.rgb(48, 53, 66));
++        b.setBackground(glassRoundRect(Color.rgb(244, 238, 252), Color.rgb(253, 251, 255),
++                Color.rgb(226, 218, 238), 12, 0.8f));
++        b.setTextColor(Color.rgb(64, 58, 78));
++        b.setElevation(dp(1));
+         UiFont.apply(this, b, false);
+         return b;
+     }
+@@ -1066,13 +1075,14 @@ public class MainActivity extends Activity {
+     private Button iconButton(String symbol) {
+         Button b = new Button(this);
+         b.setText(symbol);
+-        b.setTextSize("＋".equals(symbol) ? 21.5f : 18f);
++        b.setTextSize("＋".equals(symbol) ? 20.5f : 19.5f);
+         b.setAllCaps(false);
+         b.setGravity(Gravity.CENTER);
+         b.setPadding(0, 0, 0, 0);
+-        b.setBackground(outlinedRoundRect(Color.rgb(244, 239, 250), Color.rgb(225, 216, 239), 14, 0.8f));
++        b.setBackground(glassRoundRect(Color.rgb(234, 224, 249), Color.rgb(252, 249, 255),
++                Color.rgb(220, 210, 236), 14, 0.9f));
+         b.setTextColor(Color.rgb(96, 74, 148));
+-        b.setElevation(dp(0));
++        b.setElevation(dp(1));
+         b.setMinWidth(0);
+         b.setMinHeight(0);
+         UiFont.apply(this, b, true);
+@@ -1086,6 +1096,13 @@ public class MainActivity extends Activity {
+         return g;
+     }
+ 
++    private GradientDrawable glassRoundRect(int start, int end, int stroke, int radiusDp, float strokeDp) {
++        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{start, end});
++        g.setCornerRadius(dp(radiusDp));
++        g.setStroke(Math.max(1, Math.round(strokeDp * getResources().getDisplayMetrics().density)), stroke);
++        return g;
++    }
++
+     private GradientDrawable outlinedRoundRect(int fill, int stroke, int radiusDp, float strokeDp) {
+         GradientDrawable g = new GradientDrawable();
+         g.setColor(fill);
+diff --git a/app/src/main/java/com/timelist/app/PaletteManager.java b/app/src/main/java/com/timelist/app/PaletteManager.java
+index a6f4e91..841123a 100644
+--- a/app/src/main/java/com/timelist/app/PaletteManager.java
++++ b/app/src/main/java/com/timelist/app/PaletteManager.java
+@@ -10,38 +10,40 @@ public final class PaletteManager {
+     public static final String CHINESE = "chinese";
+     private static final String PREFS = "time_list_prefs";
+ 
+-    // Brighter Morandi palette: still restrained, but noticeably fresher on a phone screen.
++    // Lighter, fresher Morandi palette: restrained enough for long viewing,
++    // but with more chroma and brightness than the previous greyed set.
+     private static final int[] MORANDI_COLORS = {
+-            Color.rgb(156, 168, 210), // 雾紫蓝
+-            Color.rgb(127, 175, 211), // 晴空蓝
+-            Color.rgb(128, 190, 174), // 薄荷青
+-            Color.rgb(210, 143, 161), // 豆沙粉
+-            Color.rgb(145, 181, 141), // 鼠尾草绿
+-            Color.rgb(215, 160, 108), // 杏陶
+-            Color.rgb(121, 185, 197), // 雾青
+-            Color.rgb(178, 154, 195), // 藕紫
+-            Color.rgb(195, 170, 112)  // 柔金
++            Color.rgb(132, 166, 214), // 晴雾蓝
++            Color.rgb(154, 145, 207), // 柔雾紫
++            Color.rgb(112, 184, 170), // 薄荷青
++            Color.rgb(216, 130, 151), // 晨樱粉
++            Color.rgb(132, 181, 126), // 鼠尾草
++            Color.rgb(227, 158, 100), // 杏陶橙
++            Color.rgb(102, 177, 197), // 澄湖蓝
++            Color.rgb(185, 143, 194), // 藕荷紫
++            Color.rgb(203, 173, 100)  // 柔麦金
+     };
+ 
+     private static final String[] MORANDI_NAMES = {
+-            "雾紫蓝", "晴空蓝", "薄荷青", "豆沙粉", "鼠尾草绿", "杏陶", "雾青", "藕紫", "柔金"
++            "晴雾蓝", "柔雾紫", "薄荷青", "晨樱粉", "鼠尾草", "杏陶橙", "澄湖蓝", "藕荷紫", "柔麦金"
+     };
+ 
+-    // Brighter Chinese traditional-inspired set. Names follow familiar traditional colour families.
++    // Chinese-inspired palette. Every displayed name is three Chinese characters
++    // so the colour selector carries a stronger sense of imagery and rhythm.
+     private static final int[] CHINESE_COLORS = {
+-            Color.rgb(143, 169, 206), // 月白
+-            Color.rgb(102, 143, 183), // 霁青
+-            Color.rgb(114, 179, 156), // 竹青
+-            Color.rgb(207, 111, 124), // 胭脂
+-            Color.rgb(128, 170, 118), // 松绿
+-            Color.rgb(218, 164, 95),  // 杏黄
+-            Color.rgb(95, 175, 185),  // 天青
+-            Color.rgb(164, 126, 175), // 藤萝
+-            Color.rgb(184, 160, 90)   // 秋香
++            Color.rgb(101, 174, 193), // 天青色
++            Color.rgb(147, 128, 190), // 暮山紫
++            Color.rgb(205, 91, 108),  // 满江红
++            Color.rgb(111, 176, 126), // 松花绿
++            Color.rgb(104, 154, 205), // 霁雨蓝
++            Color.rgb(222, 153, 91),  // 杏花橙
++            C
