@@ -1,0 +1,160 @@
+eedData.BLUE, SeedData.TEAL, SeedData.PINK,
++            SeedData.GREEN, SeedData.ORANGE, SeedData.CYAN, SeedData.ROSE, SeedData.GOLD
++    };
++
++    private PaletteManager() {}
++
++    public static String current(Context c) {
++        SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
++        return p.getString(KEY, MORANDI);
++    }
++
++    public static String label(String key) {
++        return CHINESE.equals(key) ? "中国传统色" : "经典莫兰迪";
++    }
++
++    public static int[] colors(Context c) {
++        return CHINESE.equals(current(c)) ? CHINESE_COLORS.clone() : MORANDI_COLORS.clone();
++    }
++
++    public static String[] colorNames(Context c) {
++        return CHINESE.equals(current(c)) ? CHINESE_NAMES.clone() : MORANDI_NAMES.clone();
++    }
++
++    public static int renderColor(Context c, CourseBlock course) {
++        int[] palette = colors(c);
++        if (course != null && course.notes != null && course.notes.startsWith("@TL_NOTE|")) {
++            return palette[8];
++        }
++        int idx = course == null ? 0 : indexForColor(course.color);
++        if (idx < 0 && course != null && course.title != null) idx = Math.floorMod(course.title.hashCode(), palette.length);
++        if (idx < 0) idx = 0;
++        return palette[idx % palette.length];
++    }
++
++    public static int indexForColor(int color) {
++        for (int i = 0; i < LEGACY.length; i++) if (LEGACY[i] == color) return i;
++        for (int i = 0; i < MORANDI_COLORS.length; i++) if (MORANDI_COLORS[i] == color) return i;
++        for (int i = 0; i < CHINESE_COLORS.length; i++) if (CHINESE_COLORS[i] == color) return i;
++        return -1;
++    }
++
++    public static int indexForEditorColor(Context c, int color) {
++        int idx = indexForColor(color);
++        if (idx >= 0) return idx;
++        int[] palette = colors(c);
++        int best = 0;
++        long bestDist = Long.MAX_VALUE;
++        for (int i = 0; i < palette.length; i++) {
++            long dr = Color.red(color) - Color.red(palette[i]);
++            long dg = Color.green(color) - Color.green(palette[i]);
++            long db = Color.blue(color) - Color.blue(palette[i]);
++            long dist = dr * dr + dg * dg + db * db;
++            if (dist < bestDist) { bestDist = dist; best = i; }
++        }
++        return best;
++    }
++}
+diff --git a/app/src/main/java/com/timelist/app/WeekScheduleView.java b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+index 0347121..50456f4 100644
+--- a/app/src/main/java/com/timelist/app/WeekScheduleView.java
++++ b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+@@ -3,9 +3,10 @@ package com.timelist.app;
+ import android.content.Context;
+ import android.graphics.Canvas;
+ import android.graphics.Color;
++import android.graphics.LinearGradient;
+ import android.graphics.Paint;
+ import android.graphics.RectF;
+-import android.graphics.Typeface;
++import android.graphics.Shader;
+ import android.text.Layout;
+ import android.text.StaticLayout;
+ import android.text.TextPaint;
+@@ -28,8 +29,11 @@ public class WeekScheduleView extends View {
+     public static final int LEFT_WIDTH_DP = 36;
+ 
+     private final Paint periodPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
++    private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+     private final Paint blockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+-    private final Paint accentPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
++    private final Paint underPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
++    private final Paint glossPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
++    private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+     private final TextPaint blockText = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+     private final ArrayList<Hit> hits = new ArrayList<>();
+     private List<CourseBlock> allCourses = new ArrayList<>();
+@@ -41,6 +45,7 @@ public class WeekScheduleView extends View {
+     private final float rowHeight;
+     private final float gap;
+     private final float radius;
++    private final float density;
+ 
+     private static class Hit {
+         RectF rect;
+@@ -48,30 +53,34 @@ public class WeekScheduleView extends View {
+         Hit(RectF rect, CourseBlock course) { this.rect = rect; this.course = course; }
+     }
+ 
+-    public WeekScheduleView(Context context) {
+-        this(context, null);
+-    }
++    public WeekScheduleView(Context context) { this(context, null); }
+ 
+     public WeekScheduleView(Context context, AttributeSet attrs) {
+         super(context, attrs);
+-        float d = getResources().getDisplayMetrics().density;
++        density = getResources().getDisplayMetrics().density;
+         float sd = getResources().getDisplayMetrics().scaledDensity;
+-        leftWidth = LEFT_WIDTH_DP * d;
+-        rowHeight = 64f * d;
+-        gap = 2.5f * d;
+-        radius = 12f * d;
++        leftWidth = LEFT_WIDTH_DP * density;
++        rowHeight = 64f * density;
++        gap = 2.8f * density;
++        radius = 13f * density;
+ 
+         periodPaint.setColor(Color.rgb(112, 112, 124));
+         periodPaint.setTextSize(12.5f * sd);
+         periodPaint.setTextAlign(Paint.Align.CENTER);
+         periodPaint.setTypeface(UiFont.typeface(context, true));
+ 
+-        blockText.setColor(Color.rgb(46, 49, 59));
+-        blockText.setTextSize(10.4f * sd);
++        gridPaint.setColor(Color.argb(88, 203, 204, 212));
++        gridPaint.setStrokeWidth(Math.max(1f, 0.55f * density));
++
++        blockText.setColor(Color.WHITE);
++        blockText.setTextSize(10.5f * sd);
+         blockText.setTypeface(UiFont.typeface(context, true));
++        blockText.setShadowLayer(1.2f * density, 0f, 0.7f * density, Color.argb(80, 35, 35, 45));
+ 
+-        accentPaint.setColor(Color.argb(18, 144, 122, 197));
+-        setBackgroundColor(Color.rgb(253, 252, 255));
++        borderPaint.setStyle(Paint.Style.STROKE);
++        borderPaint.setStrokeWidth(Math.max(1f, 0.8f * density));
++        glossPaint.setStyle(Paint.Style.FILL);
++        setBackgroundColor(Color.rgb(252, 251, 253));
+     }
+ 
+     public void setListener(Listener listener) { this.listener = listener; }
+@@ -96,7 +105,16 @@ public class WeekScheduleView extends View {
+         hits.clear();
+         float dayWidth = Math.max(1f, (getWidth() - leftWidth) / 7f);
+ 
+-        // Deliberately no timetable grid: only period numbers + floating course cards.
++        // Very light structure grid: enough hierarchy without becoming a spreadsheet.
++        for (int p = 0; p <= 12; p++) {
++            float y = p * rowHeight;
++            canvas.drawLine(leftWidth, y, getWidth(), y, gridPaint);
++        }
++        for (int d = 0; d <= 7; d++) {
++            float x = leftWidth + d * dayWidth;
++            canvas.drawLine(x, 0, x, getHeight(), gridPaint);
++        }
++
+         for (int p = 1; p <= 12; p++) {
+             float cy = (p - 0.5f) * rowHeight;
+             canvas.drawText(String.valueOf(p), leftWidth * 0.50f,
+@@ -129,20 +147,40 @@ public class WeekScheduleView extends Vi
