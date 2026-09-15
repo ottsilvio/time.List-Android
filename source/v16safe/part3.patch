@@ -1,0 +1,96 @@
+diff --git a/app/src/main/java/com/timelist/app/WeekScheduleView.java b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+index e167617..12a1874 100644
+--- a/app/src/main/java/com/timelist/app/WeekScheduleView.java
++++ b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+@@ -62,28 +62,28 @@ public class WeekScheduleView extends View {
+         density = getResources().getDisplayMetrics().density;
+         float sd = getResources().getDisplayMetrics().scaledDensity;
+         leftWidth = LEFT_WIDTH_DP * density;
+-        rowHeight = 65f * density;
+-        gap = 2.8f * density;
+-        radius = 13f * density;
++        rowHeight = 64f * density;
++        gap = 3.0f * density;
++        radius = 13.5f * density;
+ 
+-        periodPaint.setColor(Color.rgb(112, 112, 124));
+-        periodPaint.setTextSize(13.4f * sd);
++        periodPaint.setColor(Color.rgb(105, 103, 114));
++        periodPaint.setTextSize(13.5f * sd);
+         periodPaint.setTextAlign(Paint.Align.CENTER);
+-        periodPaint.setTypeface(UiFont.typeface(context, true));
++        periodPaint.setTypeface(UiFont.typeface(context, false));
+ 
+-        axisPaint.setColor(Color.rgb(247, 244, 250));
+-        gridPaint.setColor(Color.argb(68, 201, 203, 212));
++        axisPaint.setColor(Color.rgb(247, 245, 249));
++        gridPaint.setColor(Color.argb(92, 219, 218, 224));
+         gridPaint.setStrokeWidth(Math.max(1f, 0.55f * density));
+ 
+         blockText.setColor(Color.WHITE);
+-        blockText.setTextSize(11.5f * sd);
++        blockText.setTextSize(11.9f * sd);
+         blockText.setTypeface(UiFont.typeface(context, true));
+-        blockText.setShadowLayer(1.35f * density, 0f, 0.75f * density, Color.argb(98, 34, 34, 44));
++        blockText.setShadowLayer(1.15f * density, 0f, 0.65f * density, Color.argb(82, 30, 31, 39));
+ 
+         borderPaint.setStyle(Paint.Style.STROKE);
+         borderPaint.setStrokeWidth(Math.max(1f, 0.8f * density));
+         glossPaint.setStyle(Paint.Style.FILL);
+-        setBackgroundColor(Color.rgb(252, 251, 253));
++        setBackgroundColor(Color.rgb(251, 250, 252));
+     }
+ 
+     public void setListener(Listener listener) { this.listener = listener; }
+@@ -154,36 +154,34 @@ public class WeekScheduleView extends View {
+             RectF rect = new RectF(l, t, r, b);
+ 
+             int base = PaletteManager.renderColor(getContext(), chosen);
+-            // Keep the text side slightly deeper, then let the card open up toward
+-            // the lower-right corner. This preserves white-text contrast while making
+-            // the block feel lighter and more transparent.
+-            int top = darken(base, 0.025f);
+-            int bottom = lighten(base, 0.20f);
+-
+-            // Soft tinted depth layer, deliberately small for a smooth long-list scroll.
+-            underPaint.setColor(withAlpha(darken(base, 0.08f), active ? 28 : 12));
+-            RectF depth = new RectF(rect.left, rect.top + 1.7f * density, rect.right, rect.bottom + 2.6f * density);
++            // Course cards are the only liquid-glass element in the app. The colour
++            // starts denser at the upper-left (where the title is read first) and opens
++            // toward the lower-right. A second white veil is also anchored to the
++            // lower-right so the gradient direction is visually unambiguous.
++            int startColor = darken(base, 0.045f);
++            int endColor = lighten(base, 0.24f);
++
++            underPaint.setColor(withAlpha(darken(base, 0.10f), active ? 24 : 10));
++            RectF depth = new RectF(rect.left, rect.top + 1.4f * density, rect.right, rect.bottom + 2.3f * density);
+             canvas.drawRoundRect(depth, radius, radius, underPaint);
+ 
+-            // Liquid-glass style gradient body: lower-right is deliberately lighter.
+             blockPaint.setShader(new LinearGradient(rect.left, rect.top, rect.right, rect.bottom,
+-                    withAlpha(top, active ? 248 : 82), withAlpha(bottom, active ? 238 : 62), Shader.TileMode.CLAMP));
++                    withAlpha(startColor, active ? 246 : 80), withAlpha(endColor, active ? 232 : 58), Shader.TileMode.CLAMP));
+             canvas.drawRoundRect(rect, radius, radius, blockPaint);
+             blockPaint.setShader(null);
+ 
+-            // Subtle glass highlight near the top edge.
+             canvas.save();
+             Path glassClip = new Path();
+             glassClip.addRoundRect(rect, radius, radius, Path.Direction.CW);
+             canvas.clipPath(glassClip);
+-            glossPaint.setShader(new LinearGradient(rect.left, rect.top, rect.left, rect.top + rect.height() * 0.46f,
+-                    Color.argb(active ? 96 : 28, 255, 255, 255), Color.TRANSPARENT, Shader.TileMode.CLAMP));
+-            canvas.drawRect(rect.left, rect.top, rect.right, rect.top + rect.height() * 0.5f, glossPaint);
++            glossPaint.setShader(new LinearGradient(rect.left, rect.top, rect.right, rect.bottom,
++                    Color.TRANSPARENT, Color.argb(active ? 82 : 20, 255, 255, 255), Shader.TileMode.CLAMP));
++            canvas.drawRect(rect, glossPaint);
+             glossPaint.setShader(null);
+             canvas.restore();
+ 
+-            // White glass rim.
+-            borderPaint.setColor(Color.argb(active ? 138 : 42, 255, 255, 255));
++            // Fine white rim keeps the translucent edge crisp without adding a button-like shadow.
++            borderPaint.setColor(Color.argb(active ? 132 : 38, 255, 255, 255));
+             canvas.drawRoundRect(new RectF(rect.left + 0.5f * density, rect.top + 0.5f * density,
+                     rect.right - 0.5f * density, rect.bottom - 0.5f * density), radius, radius, borderPaint);
+ 
