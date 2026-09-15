@@ -1,0 +1,116 @@
+diff --git a/app/src/main/java/com/timelist/app/MainActivity.java b/app/src/main/java/com/timelist/app/MainActivity.java
+index 073630a..aac11da 100644
+--- a/app/src/main/java/com/timelist/app/MainActivity.java
++++ b/app/src/main/java/com/timelist/app/MainActivity.java
+@@ -63,8 +63,8 @@ public class MainActivity extends Activity {
+     private LinearLayout titleBox;
+     private TextView titleMain;
+     private TextView titleSub;
+-    private Button addButton;
+-    private Button importButton;
++    private HeaderIconView addButton;
++    private HeaderIconView importButton;
+     private WeekScheduleView scheduleView;
+     private int viewingWeek;
+     private int currentTab = 0;
+@@ -73,8 +73,8 @@ public class MainActivity extends Activity {
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         requestWindowFeature(Window.FEATURE_NO_TITLE);
+-        getWindow().setStatusBarColor(Color.rgb(249, 247, 252));
+-        getWindow().setNavigationBarColor(Color.rgb(249, 247, 252));
++        getWindow().setStatusBarColor(Color.rgb(251, 250, 252));
++        getWindow().setNavigationBarColor(Color.rgb(250, 249, 252));
+         getWindow().getDecorView().setSystemUiVisibility(
+                 View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+ 
+@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
+     private void buildShell() {
+         root = new LinearLayout(this);
+         root.setOrientation(LinearLayout.VERTICAL);
+-        root.setBackgroundColor(Color.rgb(252, 250, 253));
++        root.setBackgroundColor(Color.rgb(251, 250, 252));
+         root.setOnApplyWindowInsetsListener((v, insets) -> {
+             int top = insets.getSystemWindowInsetTop();
+             int bottom = insets.getSystemWindowInsetBottom();
+@@ -107,28 +107,28 @@ public class MainActivity extends Activity {
+         topBar = new LinearLayout(this);
+         topBar.setOrientation(LinearLayout.HORIZONTAL);
+         topBar.setGravity(Gravity.CENTER_VERTICAL);
+-        topBar.setPadding(dp(18), dp(6), dp(16), dp(3));
+-        topBar.setBackgroundColor(Color.rgb(249, 247, 252));
+-        root.addView(topBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(70)));
++        topBar.setPadding(dp(18), dp(8), dp(16), dp(5));
++        topBar.setBackgroundColor(Color.rgb(251, 250, 252));
++        root.addView(topBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(76)));
+ 
+         titleBox = new LinearLayout(this);
+         titleBox.setOrientation(LinearLayout.VERTICAL);
+         titleBox.setGravity(Gravity.CENTER_VERTICAL);
+         topBar.addView(titleBox, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+-        titleMain = text("", 25, Color.rgb(35, 34, 43), true);
+-        titleSub = text("", 14f, Color.rgb(111, 108, 121), false);
++        titleMain = text("", 27.5f, Color.rgb(31, 31, 38), true);
++        titleSub = text("", 14.5f, Color.rgb(112, 109, 120), false);
+         titleBox.addView(titleMain);
+         titleBox.addView(titleSub);
+ 
+-        addButton = iconButton("＋");
+-        importButton = iconButton("⌾");
++        addButton = new HeaderIconView(this, HeaderIconView.PLUS);
++        importButton = new HeaderIconView(this, HeaderIconView.SCAN);
+         addButton.setContentDescription("添加课程");
+         importButton.setContentDescription("从课表图片导入");
+         addButton.setOnClickListener(v -> CourseEditorDialog.show(this, null,
+                 Math.max(1, Math.min(7, weekdayToday())), 1, editorListener));
+         importButton.setOnClickListener(v -> pickImage());
+         LinearLayout.LayoutParams addLp = new LinearLayout.LayoutParams(dp(38), dp(38));
+-        addLp.rightMargin = dp(10);
++        addLp.rightMargin = dp(9);
+         topBar.addView(addButton, addLp);
+         topBar.addView(importButton, new LinearLayout.LayoutParams(dp(38), dp(38)));
+ 
+@@ -139,31 +139,30 @@ public class MainActivity extends Activity {
+         bottomBar = new LinearLayout(this);
+         bottomBar.setOrientation(LinearLayout.HORIZONTAL);
+         bottomBar.setGravity(Gravity.CENTER);
+-        bottomBar.setPadding(dp(10), dp(3), dp(10), dp(4));
+-        bottomBar.setBackgroundColor(Color.rgb(247, 244, 250));
+-        root.addView(bottomBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(72)));
+-        addBottomTab("□", "课表", 0);
+-        addBottomTab("≡", "日程", 1);
+-        addBottomTab("○", "我的", 2);
++        bottomBar.setPadding(dp(10), dp(3), dp(10), dp(5));
++        bottomBar.setBackground(outlinedRoundRect(Color.rgb(252, 251, 253), Color.rgb(235, 232, 239), 0, 0.55f));
++        root.addView(bottomBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(70)));
++        addBottomTab("课表", 0);
++        addBottomTab("日程", 1);
++        addBottomTab("我的", 2);
+ 
+         setContentView(root);
+         root.requestApplyInsets();
+     }
+ 
+-    private void addBottomTab(String icon, String label, int index) {
++    private void addBottomTab(String label, int index) {
+         LinearLayout tab = new LinearLayout(this);
+         tab.setOrientation(LinearLayout.VERTICAL);
+         tab.setGravity(Gravity.CENTER);
+-        tab.setPadding(0, dp(4), 0, dp(3));
++        tab.setPadding(0, dp(4), 0, dp(2));
+         tab.setTag(index);
+ 
+-        TextView iconView = text(icon, 20.5f, Color.rgb(126, 123, 135), false);
+-        iconView.setGravity(Gravity.CENTER);
+-        TextView labelView = text(label, 14.8f, Color.rgb(126, 123, 135), false);
++        NavIconView iconView = new NavIconView(this, index);
++        TextView labelView = text(label, 13.7f, Color.rgb(126, 123, 135), false);
+         labelView.setGravity(Gravity.CENTER);
+         labelView.setPadding(0, dp(1), 0, 0);
+-        tab.addView(iconView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(27)));
+-        tab.addView(labelView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(27)));
++        tab.addView(iconView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(28)));
++        tab.addView(labelView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(25)));
+ 
+         tab.setOnClickListener(v -> {
+             currentTab = index;
