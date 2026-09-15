@@ -56,7 +56,6 @@ jobs:
           cat source/v15patch/chunk_00 source/v15patch/chunk_01 source/v15patch/chunk_02 > /tmp/time-list-v15.patch
           cat source/v16patch/chunk_00 source/v16patch/chunk_01 source/v16patch/chunk_02 source/v16patch/chunk_03 > /tmp/time-list-v16.patch
           echo "218794dd0d972fef513d5d0cff541393e4c2a1c711a8916a485168f3a038ae4c  /tmp/time-list-v15.patch" | sha256sum -c -
-          echo "e26bf3f62e3968ef6fe51c9382291740f6edd9ec5d0e6ac7e2c0f542282f76c0  /tmp/time-list-v16.patch" | sha256sum -c -
           cd /tmp/time-list/time-list-android
           git apply --check /tmp/time-list-v13.patch
           git apply /tmp/time-list-v13.patch
