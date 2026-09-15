@@ -1,1 +1,2 @@
 Time List v1.4 UI refinement build trigger
+Ready for APK build.
