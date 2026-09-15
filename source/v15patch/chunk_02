@@ -1,0 +1,89 @@
+olor.rgb(91, 174, 154),  // 竹月青
++            Color.rgb(135, 174, 211), // 月白色
++            Color.rgb(195, 164, 83)   // 秋香黄
+     };
+ 
+     private static final String[] CHINESE_NAMES = {
+-            "月白", "霁青", "竹青", "胭脂", "松绿", "杏黄", "天青", "藤萝", "秋香"
++            "天青色", "暮山紫", "满江红", "松花绿", "霁雨蓝", "杏花橙", "竹月青", "月白色", "秋香黄"
+     };
+ 
+     private static final int[] LEGACY = {
+diff --git a/app/src/main/java/com/timelist/app/WeekScheduleView.java b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+index 9a91830..e167617 100644
+--- a/app/src/main/java/com/timelist/app/WeekScheduleView.java
++++ b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+@@ -30,6 +30,7 @@ public class WeekScheduleView extends View {
+     public static final int LEFT_WIDTH_DP = 36;
+ 
+     private final Paint periodPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
++    private final Paint axisPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+     private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+     private final Paint blockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+     private final Paint underPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+@@ -70,13 +71,14 @@ public class WeekScheduleView extends View {
+         periodPaint.setTextAlign(Paint.Align.CENTER);
+         periodPaint.setTypeface(UiFont.typeface(context, true));
+ 
+-        gridPaint.setColor(Color.argb(74, 205, 206, 214));
++        axisPaint.setColor(Color.rgb(247, 244, 250));
++        gridPaint.setColor(Color.argb(68, 201, 203, 212));
+         gridPaint.setStrokeWidth(Math.max(1f, 0.55f * density));
+ 
+         blockText.setColor(Color.WHITE);
+-        blockText.setTextSize(11.3f * sd);
++        blockText.setTextSize(11.5f * sd);
+         blockText.setTypeface(UiFont.typeface(context, true));
+-        blockText.setShadowLayer(1.2f * density, 0f, 0.7f * density, Color.argb(80, 35, 35, 45));
++        blockText.setShadowLayer(1.35f * density, 0f, 0.75f * density, Color.argb(98, 34, 34, 44));
+ 
+         borderPaint.setStyle(Paint.Style.STROKE);
+         borderPaint.setStrokeWidth(Math.max(1f, 0.8f * density));
+@@ -106,6 +108,9 @@ public class WeekScheduleView extends View {
+         hits.clear();
+         float dayWidth = Math.max(1f, (getWidth() - leftWidth) / 7f);
+ 
++        // A very light tinted number rail gives the timetable a clear first layer.
++        canvas.drawRect(0, 0, leftWidth, getHeight(), axisPaint);
++
+         // Very light structure grid: enough hierarchy without becoming a spreadsheet.
+         for (int p = 0; p <= 12; p++) {
+             float y = p * rowHeight;
+@@ -149,17 +154,20 @@ public class WeekScheduleView extends View {
+             RectF rect = new RectF(l, t, r, b);
+ 
+             int base = PaletteManager.renderColor(getContext(), chosen);
+-            int top = lighten(base, 0.24f);
+-            int bottom = lighten(base, 0.035f);
++            // Keep the text side slightly deeper, then let the card open up toward
++            // the lower-right corner. This preserves white-text contrast while making
++            // the block feel lighter and more transparent.
++            int top = darken(base, 0.025f);
++            int bottom = lighten(base, 0.20f);
+ 
+             // Soft tinted depth layer, deliberately small for a smooth long-list scroll.
+             underPaint.setColor(withAlpha(darken(base, 0.08f), active ? 28 : 12));
+             RectF depth = new RectF(rect.left, rect.top + 1.7f * density, rect.right, rect.bottom + 2.6f * density);
+             canvas.drawRoundRect(depth, radius, radius, underPaint);
+ 
+-            // Liquid-glass style gradient body.
++            // Liquid-glass style gradient body: lower-right is deliberately lighter.
+             blockPaint.setShader(new LinearGradient(rect.left, rect.top, rect.right, rect.bottom,
+-                    withAlpha(top, active ? 246 : 78), withAlpha(bottom, active ? 240 : 60), Shader.TileMode.CLAMP));
++                    withAlpha(top, active ? 248 : 82), withAlpha(bottom, active ? 238 : 62), Shader.TileMode.CLAMP));
+             canvas.drawRoundRect(rect, radius, radius, blockPaint);
+             blockPaint.setShader(null);
+ 
+diff --git a/app/src/main/res/values/styles.xml b/app/src/main/res/values/styles.xml
+index 204d3cd..9330723 100644
+--- a/app/src/main/res/values/styles.xml
++++ b/app/src/main/res/values/styles.xml
+@@ -1,7 +1,7 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <resources>
+     <style name="Theme.TimeList" parent="android:style/Theme.Material.Light.NoActionBar">
+-        <item name="android:fontFamily">serif</item>
++        <item name="android:fontFamily">sans-serif</item>
+         <item name="android:windowActionModeOverlay">true</item>
+         <item name="android:colorAccent">#8165B8</item>
+         <item name="android:navigationBarColor">#F9F7FC</item>
