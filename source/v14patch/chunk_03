@@ -1,0 +1,156 @@
+"晴空蓝", "薄荷青", "豆沙粉", "鼠尾草绿", "杏陶", "雾青", "藕紫", "柔金"
+     };
+ 
+-    // Chinese traditional-inspired palette: restrained mineral / plant tones.
++    // Brighter Chinese traditional-inspired set. Names follow familiar traditional colour families.
+     private static final int[] CHINESE_COLORS = {
+-            Color.rgb(105, 91, 134),  // 藕荷
+-            Color.rgb(72, 126, 151),  // 黛蓝
+-            Color.rgb(75, 145, 135),  // 竹青
+-            Color.rgb(178, 90, 103),  // 胭脂
+-            Color.rgb(105, 145, 91),  // 松绿
+-            Color.rgb(197, 124, 75),  // 杏子
+-            Color.rgb(71, 153, 166),  // 琉璃青
+-            Color.rgb(143, 92, 128),  // 藤萝
+-            Color.rgb(181, 151, 66)   // 松花
++            Color.rgb(143, 169, 206), // 月白
++            Color.rgb(102, 143, 183), // 霁青
++            Color.rgb(114, 179, 156), // 竹青
++            Color.rgb(207, 111, 124), // 胭脂
++            Color.rgb(128, 170, 118), // 松绿
++            Color.rgb(218, 164, 95),  // 杏黄
++            Color.rgb(95, 175, 185),  // 天青
++            Color.rgb(164, 126, 175), // 藤萝
++            Color.rgb(184, 160, 90)   // 秋香
+     };
+ 
+     private static final String[] CHINESE_NAMES = {
+-            "藕荷", "黛蓝", "竹青", "胭脂", "松绿", "杏子", "琉璃青", "藤萝", "松花"
++            "月白", "霁青", "竹青", "胭脂", "松绿", "杏黄", "天青", "藤萝", "秋香"
+     };
+ 
+     private static final int[] LEGACY = {
+@@ -64,6 +64,10 @@ public final class PaletteManager {
+         return CHINESE.equals(current(c)) ? CHINESE_COLORS.clone() : MORANDI_COLORS.clone();
+     }
+ 
++    public static int[] colorsFor(String style) {
++        return CHINESE.equals(style) ? CHINESE_COLORS.clone() : MORANDI_COLORS.clone();
++    }
++
+     public static String[] colorNames(Context c) {
+         return CHINESE.equals(current(c)) ? CHINESE_NAMES.clone() : MORANDI_NAMES.clone();
+     }
+diff --git a/app/src/main/java/com/timelist/app/UiFont.java b/app/src/main/java/com/timelist/app/UiFont.java
+index d1d369e..76073c5 100644
+--- a/app/src/main/java/com/timelist/app/UiFont.java
++++ b/app/src/main/java/com/timelist/app/UiFont.java
+@@ -16,7 +16,7 @@ public final class UiFont {
+ 
+     public static String current(Context c) {
+         SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+-        return p.getString(KEY, SERIF);
++        return p.getString(KEY, SANS);
+     }
+ 
+     public static Typeface typeface(Context c, boolean bold) {
+@@ -33,8 +33,8 @@ public final class UiFont {
+     }
+ 
+     public static String label(String key) {
+-        if (SANS.equals(key)) return "系统黑体";
++        if (SANS.equals(key)) return "系统黑体（默认）";
+         if (LIGHT.equals(key)) return "轻盈黑体";
+-        return "宋体（默认）";
++        return "宋体";
+     }
+ }
+diff --git a/app/src/main/java/com/timelist/app/WeekScheduleView.java b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+index 50456f4..9a91830 100644
+--- a/app/src/main/java/com/timelist/app/WeekScheduleView.java
++++ b/app/src/main/java/com/timelist/app/WeekScheduleView.java
+@@ -5,6 +5,7 @@ import android.graphics.Canvas;
+ import android.graphics.Color;
+ import android.graphics.LinearGradient;
+ import android.graphics.Paint;
++import android.graphics.Path;
+ import android.graphics.RectF;
+ import android.graphics.Shader;
+ import android.text.Layout;
+@@ -60,20 +61,20 @@ public class WeekScheduleView extends View {
+         density = getResources().getDisplayMetrics().density;
+         float sd = getResources().getDisplayMetrics().scaledDensity;
+         leftWidth = LEFT_WIDTH_DP * density;
+-        rowHeight = 64f * density;
++        rowHeight = 65f * density;
+         gap = 2.8f * density;
+         radius = 13f * density;
+ 
+         periodPaint.setColor(Color.rgb(112, 112, 124));
+-        periodPaint.setTextSize(12.5f * sd);
++        periodPaint.setTextSize(13.4f * sd);
+         periodPaint.setTextAlign(Paint.Align.CENTER);
+         periodPaint.setTypeface(UiFont.typeface(context, true));
+ 
+-        gridPaint.setColor(Color.argb(88, 203, 204, 212));
++        gridPaint.setColor(Color.argb(74, 205, 206, 214));
+         gridPaint.setStrokeWidth(Math.max(1f, 0.55f * density));
+ 
+         blockText.setColor(Color.WHITE);
+-        blockText.setTextSize(10.5f * sd);
++        blockText.setTextSize(11.3f * sd);
+         blockText.setTypeface(UiFont.typeface(context, true));
+         blockText.setShadowLayer(1.2f * density, 0f, 0.7f * density, Color.argb(80, 35, 35, 45));
+ 
+@@ -148,31 +149,33 @@ public class WeekScheduleView extends View {
+             RectF rect = new RectF(l, t, r, b);
+ 
+             int base = PaletteManager.renderColor(getContext(), chosen);
+-            int top = lighten(base, 0.13f);
+-            int bottom = darken(base, 0.055f);
++            int top = lighten(base, 0.24f);
++            int bottom = lighten(base, 0.035f);
+ 
+             // Soft tinted depth layer, deliberately small for a smooth long-list scroll.
+-            underPaint.setColor(withAlpha(darken(base, 0.10f), active ? 34 : 14));
++            underPaint.setColor(withAlpha(darken(base, 0.08f), active ? 28 : 12));
+             RectF depth = new RectF(rect.left, rect.top + 1.7f * density, rect.right, rect.bottom + 2.6f * density);
+             canvas.drawRoundRect(depth, radius, radius, underPaint);
+ 
+             // Liquid-glass style gradient body.
+             blockPaint.setShader(new LinearGradient(rect.left, rect.top, rect.right, rect.bottom,
+-                    withAlpha(top, active ? 242 : 76), withAlpha(bottom, active ? 236 : 58), Shader.TileMode.CLAMP));
++                    withAlpha(top, active ? 246 : 78), withAlpha(bottom, active ? 240 : 60), Shader.TileMode.CLAMP));
+             canvas.drawRoundRect(rect, radius, radius, blockPaint);
+             blockPaint.setShader(null);
+ 
+             // Subtle glass highlight near the top edge.
+             canvas.save();
+-            canvas.clipRoundRect(rect, radius, radius);
++            Path glassClip = new Path();
++            glassClip.addRoundRect(rect, radius, radius, Path.Direction.CW);
++            canvas.clipPath(glassClip);
+             glossPaint.setShader(new LinearGradient(rect.left, rect.top, rect.left, rect.top + rect.height() * 0.46f,
+-                    Color.argb(active ? 78 : 24, 255, 255, 255), Color.TRANSPARENT, Shader.TileMode.CLAMP));
++                    Color.argb(active ? 96 : 28, 255, 255, 255), Color.TRANSPARENT, Shader.TileMode.CLAMP));
+             canvas.drawRect(rect.left, rect.top, rect.right, rect.top + rect.height() * 0.5f, glossPaint);
+             glossPaint.setShader(null);
+             canvas.restore();
+ 
+             // White glass rim.
+-            borderPaint.setColor(Color.argb(active ? 118 : 36, 255, 255, 255));
++            borderPaint.setColor(Color.argb(active ? 138 : 42, 255, 255, 255));
+             canvas.drawRoundRect(new RectF(rect.left + 0.5f * density, rect.top + 0.5f * density,
+                     rect.right - 0.5f * density, rect.bottom - 0.5f * density), radius, radius, borderPaint);
+ 
+@@ -215,7 +218,9 @@ public class WeekScheduleView extends View {
+                 .setEllipsize(android.text.TextUtils.TruncateAt.END)
+                 .build();
+         canvas.save();
+-        canvas.clipRoundRect(rect, radius, radius);
++        Path textClip = new Path();
++        textClip.addRoundRect(rect, radius, radius, Path.Direction.CW);
++        canvas.clipPath(textClip);
+         canvas.translate(rect.left + pad, rect.top + pad);
+         layout.draw(canvas);
+         canvas.restore();
