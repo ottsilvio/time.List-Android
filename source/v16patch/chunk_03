@@ -1,0 +1,37 @@
+the lower-right. A second white veil is also anchored to the
++            // lower-right so the gradient direction is visually unambiguous.
++            int startColor = darken(base, 0.045f);
++            int endColor = lighten(base, 0.24f);
++
++            underPaint.setColor(withAlpha(darken(base, 0.10f), active ? 24 : 10));
++            RectF depth = new RectF(rect.left, rect.top + 1.4f * density, rect.right, rect.bottom + 2.3f * density);
+             canvas.drawRoundRect(depth, radius, radius, underPaint);
+ 
+-            // Liquid-glass style gradient body: lower-right is deliberately lighter.
+             blockPaint.setShader(new LinearGradient(rect.left, rect.top, rect.right, rect.bottom,
+-                    withAlpha(top, active ? 248 : 82), withAlpha(bottom, active ? 238 : 62), Shader.TileMode.CLAMP));
++                    withAlpha(startColor, active ? 246 : 80), withAlpha(endColor, active ? 232 : 58), Shader.TileMode.CLAMP));
+             canvas.drawRoundRect(rect, radius, radius, blockPaint);
+             blockPaint.setShader(null);
+ 
+-            // Subtle glass highlight near the top edge.
+             canvas.save();
+             Path glassClip = new Path();
+             glassClip.addRoundRect(rect, radius, radius, Path.Direction.CW);
+             canvas.clipPath(glassClip);
+-            glossPaint.setShader(new LinearGradient(rect.left, rect.top, rect.left, rect.top + rect.height() * 0.46f,
+-                    Color.argb(active ? 96 : 28, 255, 255, 255), Color.TRANSPARENT, Shader.TileMode.CLAMP));
+-            canvas.drawRect(rect.left, rect.top, rect.right, rect.top + rect.height() * 0.5f, glossPaint);
++            glossPaint.setShader(new LinearGradient(rect.left, rect.top, rect.right, rect.bottom,
++                    Color.TRANSPARENT, Color.argb(active ? 82 : 20, 255, 255, 255), Shader.TileMode.CLAMP));
++            canvas.drawRect(rect, glossPaint);
+             glossPaint.setShader(null);
+             canvas.restore();
+ 
+-            // White glass rim.
+-            borderPaint.setColor(Color.argb(active ? 138 : 42, 255, 255, 255));
++            // Fine white rim keeps the translucent edge crisp without adding a button-like shadow.
++            borderPaint.setColor(Color.argb(active ? 132 : 38, 255, 255, 255));
+             canvas.drawRoundRect(new RectF(rect.left + 0.5f * density, rect.top + 0.5f * density,
+                     rect.right - 0.5f * density, rect.bottom - 0.5f * density), radius, radius, borderPaint);
+ 
