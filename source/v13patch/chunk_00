@@ -1,0 +1,133 @@
+diff --git a/app/build.gradle b/app/build.gradle
+index c4dd6cf..6cbc1b3 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -10,8 +10,8 @@ android {
+         applicationId 'com.timelist.app'
+         minSdk 23
+         targetSdk 35
+-        versionCode 3
+-        versionName '1.2.0'
++        versionCode 4
++        versionName '1.3.0'
+     }
+ 
+     buildFeatures {
+diff --git a/app/src/main/java/com/timelist/app/CourseEditorDialog.java b/app/src/main/java/com/timelist/app/CourseEditorDialog.java
+index b898717..9ddffca 100644
+--- a/app/src/main/java/com/timelist/app/CourseEditorDialog.java
++++ b/app/src/main/java/com/timelist/app/CourseEditorDialog.java
+@@ -25,19 +25,13 @@ public final class CourseEditorDialog {
+         void onDelete(CourseBlock course);
+     }
+ 
+-    private static final int[] COLORS = {
+-            SeedData.PURPLE, SeedData.BLUE, SeedData.TEAL, SeedData.PINK,
+-            SeedData.GREEN, SeedData.ORANGE, SeedData.CYAN, SeedData.ROSE, SeedData.GOLD
+-    };
+-    private static final String[] COLOR_NAMES = {
+-            "薰衣草紫", "晴空蓝", "薄荷青", "樱花粉", "新芽绿", "杏桃橙", "澄澈青", "柔玫紫", "日光黄"
+-    };
+-
+     private CourseEditorDialog() {}
+ 
+     public static void show(Context context, CourseBlock existing, int presetWeekday, int presetPeriod, Listener listener) {
+         final boolean isNew = existing == null;
+         final CourseBlock source = existing == null ? new CourseBlock() : existing;
++        final int[] paletteColors = PaletteManager.colors(context);
++        final String[] paletteNames = PaletteManager.colorNames(context);
+ 
+         ScrollView scroll = new ScrollView(context);
+         scroll.setFillViewport(true);
+@@ -105,10 +99,10 @@ public final class CourseEditorDialog {
+         EditText teacher = addField(context, root, "教师（可空）", "", source.teacher);
+         EditText notes = addField(context, root, "备注（可空）", "", source.notes);
+ 
+-        addLabel(context, root, "课程颜色");
++        addLabel(context, root, "课程颜色 · " + PaletteManager.label(PaletteManager.current(context)));
+         Spinner color = new Spinner(context);
+-        color.setAdapter(new ColorSpinnerAdapter(context));
+-        color.setSelection(findColor(source.color));
++        color.setAdapter(new ColorSpinnerAdapter(context, paletteColors, paletteNames));
++        color.setSelection(PaletteManager.indexForEditorColor(context, source.color));
+         styleSpinner(context, color);
+         root.addView(color, spacedLp(context, 2));
+ 
+@@ -148,7 +142,7 @@ public final class CourseEditorDialog {
+                 result.startPeriod = sp;
+                 result.endPeriod = ep;
+                 result.weeks = weekExpr;
+-                result.color = COLORS[color.getSelectedItemPosition()];
++                result.color = paletteColors[color.getSelectedItemPosition()];
+                 result.notes = notes.getText().toString().trim();
+                 listener.onSave(result, isNew);
+                 dialog.dismiss();
+@@ -239,11 +233,6 @@ public final class CourseEditorDialog {
+         return weekday >= 1 && weekday <= 7 ? x[weekday] : "";
+     }
+ 
+-    private static int findColor(int color) {
+-        if (color == 0) return 0;
+-        for (int i = 0; i < COLORS.length; i++) if (COLORS[i] == color) return i;
+-        return 0;
+-    }
+ 
+     private static LinearLayout.LayoutParams lp() {
+         return new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+@@ -295,9 +284,13 @@ public final class CourseEditorDialog {
+ 
+     private static final class ColorSpinnerAdapter extends BaseAdapter {
+         private final Context context;
+-        ColorSpinnerAdapter(Context context) { this.context = context; }
+-        @Override public int getCount() { return COLORS.length; }
+-        @Override public Object getItem(int position) { return COLOR_NAMES[position]; }
++        private final int[] colors;
++        private final String[] names;
++        ColorSpinnerAdapter(Context context, int[] colors, String[] names) {
++            this.context = context; this.colors = colors; this.names = names;
++        }
++        @Override public int getCount() { return colors.length; }
++        @Override public Object getItem(int position) { return names[position]; }
+         @Override public long getItemId(int position) { return position; }
+         @Override public View getView(int position, View convertView, ViewGroup parent) { return row(position, false); }
+         @Override public View getDropDownView(int position, View convertView, ViewGroup parent) { return row(position, true); }
+@@ -309,14 +302,14 @@ public final class CourseEditorDialog {
+             row.setPadding(dp(context, 10), dp(context, dropdown ? 9 : 6), dp(context, 10), dp(context, dropdown ? 9 : 6));
+ 
+             View swatch = new View(context);
+-            GradientDrawable chip = rounded(COLORS[position], dp(context, 5));
++            GradientDrawable chip = rounded(colors[position], dp(context, 6));
+             swatch.setBackground(chip);
+             LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(dp(context, 24), dp(context, 18));
+             sp.rightMargin = dp(context, 10);
+             row.addView(swatch, sp);
+ 
+             TextView name = new TextView(context);
+-            name.setText(COLOR_NAMES[position]);
++            name.setText(names[position]);
+             name.setTextSize(15);
+             name.setTextColor(Color.rgb(43, 43, 52));
+             UiFont.apply(context, name, false);
+diff --git a/app/src/main/java/com/timelist/app/MainActivity.java b/app/src/main/java/com/timelist/app/MainActivity.java
+index 66144ea..1b84a10 100644
+--- a/app/src/main/java/com/timelist/app/MainActivity.java
++++ b/app/src/main/java/com/timelist/app/MainActivity.java
+@@ -83,6 +83,7 @@ public class MainActivity extends Activity {
+         if (!prefs.contains(KEY_START)) prefs.edit().putString(KEY_START, "2026-08-31").apply();
+         if (!prefs.contains(KEY_WEEKS)) prefs.edit().putInt(KEY_WEEKS, 20).apply();
+         if (!prefs.contains(KEY_SHOW_OFF)) prefs.edit().putBoolean(KEY_SHOW_OFF, false).apply();
++        if (!prefs.contains(PaletteManager.KEY)) prefs.edit().putString(PaletteManager.KEY, PaletteManager.MORANDI).apply();
+         if (db.countCourses() == 0) restoreSeed(false);
+         applyUserScheduleRevision();
+ 
+@@ -119,7 +120,7 @@ public class MainActivity extends Activity {
+         titleBox.addView(titleSub);
+ 
+         addButton = iconButton("＋");
+-        importButton = iconButton("▣");
++        importButton = iconButton("识");
+         addButton.setContentDescription("添加课程");
+         importButton.setContentDescription("从课表图片导入");
+         addButton.setOnClickListener(v -> CourseEditorDialog.show(this, null,
+@@ -433,6 +434,10 @@ public class MainActivity extends Activity {
+         Button fontButton = actionButton("字体：" + UiFont
