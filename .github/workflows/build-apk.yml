@@ -54,7 +54,9 @@ jobs:
           cat source/v13patch/chunk_00 source/v13patch/chunk_01 source/v13patch/chunk_02 source/v13patch/chunk_03 > /tmp/time-list-v13.patch
           cat source/v14patch/chunk_00 source/v14patch/chunk_01 source/v14patch/chunk_02 source/v14patch/chunk_03 > /tmp/time-list-v14.patch
           cat source/v15patch/chunk_00 source/v15patch/chunk_01 source/v15patch/chunk_02 > /tmp/time-list-v15.patch
+          cat source/v16patch/chunk_00 source/v16patch/chunk_01 source/v16patch/chunk_02 source/v16patch/chunk_03 > /tmp/time-list-v16.patch
           echo "218794dd0d972fef513d5d0cff541393e4c2a1c711a8916a485168f3a038ae4c  /tmp/time-list-v15.patch" | sha256sum -c -
+          echo "e26bf3f62e3968ef6fe51c9382291740f6edd9ec5d0e6ac7e2c0f542282f76c0  /tmp/time-list-v16.patch" | sha256sum -c -
           cd /tmp/time-list/time-list-android
           git apply --check /tmp/time-list-v13.patch
           git apply /tmp/time-list-v13.patch
@@ -63,10 +65,12 @@ jobs:
           sed -i 's/versionCode 4/versionCode 5/' app/build.gradle
           git apply --check /tmp/time-list-v15.patch
           git apply /tmp/time-list-v15.patch
-          test -f app/src/main/java/com/timelist/app/PaletteManager.java
-          grep -q "versionCode 6" app/build.gradle
-          grep -q "versionName '1.5.0'" app/build.gradle
-          grep -q "android:fontFamily">sans-serif app/src/main/res/values/styles.xml || true
+          git apply --check /tmp/time-list-v16.patch
+          git apply /tmp/time-list-v16.patch
+          test -f app/src/main/java/com/timelist/app/NavIconView.java
+          test -f app/src/main/java/com/timelist/app/HeaderIconView.java
+          grep -q "versionCode 7" app/build.gradle
+          grep -q "versionName '1.6.0'" app/build.gradle
 
       - name: Build debug APK
         working-directory: /tmp/time-list/time-list-android
@@ -74,13 +78,13 @@ jobs:
 
       - name: Prepare installable APK
         run: |
-          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.5.apk
-          ls -lh Time-List-v1.5.apk
+          cp /tmp/time-list/time-list-android/app/build/outputs/apk/debug/app-debug.apk Time-List-v1.6.apk
+          ls -lh Time-List-v1.6.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Time-List-v1.5-APK
-          path: Time-List-v1.5.apk
+          name: Time-List-v1.6-APK
+          path: Time-List-v1.6.apk
           if-no-files-found: error
           retention-days: 30
